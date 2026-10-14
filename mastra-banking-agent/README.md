@@ -31,8 +31,8 @@ Click the trace for *"I think I lost my debit card for my checking account. Plea
 
 - `invoke_agent` is the root; under it, one `agent_step` per round of the loop.
 - Step 1 holds an `llm` span (`chat gpt-4o-mini`, 376 tokens) and a `tool` span `execute_tool listAccounts`: the model first asked which cards exist.
-- Step 2 holds `chat gpt-4o-mini` (497 tokens) and `execute_tool freezeCard`. Its input is `{"cardId": "CARD-5101"}`, the id the model picked from the previous tool result, and its output is `{"status": "frozen", "last4": "8842"}`.
-- Step 3 is the final `chat gpt-4o-mini` call that writes the reply.
+- Step 2 holds `chat gpt-4o-mini` (497 tokens) and `execute_tool freezeCard`. Its input is `{"cardId": "CARD-5101"}`, the id the model picked from the previous tool result, and its output is `{"cardId": "CARD-5101", "last4": "8842", "status": "frozen"}`.
+- Step 3 is the final `chat gpt-4o-mini` call (558 tokens) that writes the reply. The trace totals 1,431 tokens and about $0.00024; the whole four-request run costs under a tenth of a cent. Exact numbers vary a little from run to run, since the model chooses its own steps.
 
 The tool spans have type `tool`, so the **Spans** tab can be filtered to just them, which is the quickest way to audit every card freeze. The other three traces are shorter or longer in the way you'd expect: the balance question chains `listAccounts` then `getBalance`, and the request for account `ACC-7003` is a single `execute_tool getBalance` whose output is `{"error": "Account ACC-7003 not found for this customer"}`.
 
@@ -43,7 +43,7 @@ Prefer the terminal? `npm run tree` reads the project back through Opik's REST A
 1. Have Opik running (local default: http://localhost:5173) and an OpenAI key in `.env`.
 2. `cp .env.example .env` and fill in `OPENAI_API_KEY` (a `.env` further up the directory tree is picked up too).
 3. `npm install`
-4. `npm run demo`: four scripted customer requests, about 25 seconds.
+4. `npm run demo`: four scripted customer requests, about 15 seconds.
 5. `npm run tree` to print the newest traces from Opik, or open the project in the UI.
 
 For Opik Cloud, drop `OPIK_URL_OVERRIDE`, set `OPIK_API_KEY` and `OPIK_WORKSPACE` in `.env`.
@@ -69,6 +69,17 @@ new OtelExporter({
 
 **`opentelemetry disabled: [OtelExporter] Provider configuration is required`.**
 Passing only `exporter: ...` to `OtelExporter` silently turns tracing off. A `provider` block is mandatory even when you bring your own exporter; give it the `custom` endpoint and headers as above.
+
+**Every `llm` span shows tokens but the cost is empty (null).**
+Mastra reports the model provider as the AI SDK id, `openai.responses`. Opik only prices a call when the provider is a name it recognises, and `openai.responses` is not one. `tidyAttributes` in `src/opik-export.ts` trims the id to its first segment and writes it to both attributes Opik may read:
+
+```ts
+const family = provider.split(".")[0];           // "openai.responses" -> "openai"
+out["gen_ai.provider.name"] = family;
+out["gen_ai.system"] = family;                   // the attribute Opik's OTLP mapping reads as `provider`
+```
+
+After the change all 11 `llm` spans in the demo carry a cost and the provider column reads `openai`.
 
 ## Running without Opik
 

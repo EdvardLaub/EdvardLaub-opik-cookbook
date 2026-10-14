@@ -7,15 +7,27 @@ import type { ExportResult } from "@opentelemetry/core";
 
 type Attrs = Record<string, unknown>;
 
-// Mastra stores the agent's reply on the root span as `mastra.agent_run.output` ({ text, files }),
-// a key Opik does not recognise, so the trace's Output column stays empty. Opik does read plain
-// `input` / `output` attributes, so we copy the customer's message and the final answer there.
 export function tidyAttributes(attrs: Attrs): Attrs {
-  if (attrs["mastra.span.type"] !== "agent_run") return attrs;
   const out: Attrs = { ...attrs };
-  if (typeof attrs["mastra.agent_run.input"] === "string") out["input"] = attrs["mastra.agent_run.input"];
-  const text = extractText(attrs["mastra.agent_run.output"]);
-  if (text !== undefined) out["output"] = text;
+
+  // Mastra labels OpenAI model calls with the AI SDK's provider id, e.g. "openai.responses". Opik prices
+  // a call only when the provider is a name it knows ("openai"), so with the raw value the llm spans carry
+  // tokens but a null cost. We normalise "<provider>.<api>" to "<provider>" in both attributes Opik may read.
+  const provider = attrs["gen_ai.provider.name"];
+  if (typeof provider === "string") {
+    const family = provider.split(".")[0] as string;
+    out["gen_ai.provider.name"] = family;
+    out["gen_ai.system"] = family;
+  }
+
+  // Trace Input/Output: Mastra stores the agent's reply on the root span as `mastra.agent_run.output`
+  // ({ text, files }), a key Opik does not recognise, so the trace's Output column stays empty. Opik does
+  // read plain `input` / `output` attributes, so we copy the customer's message and the final answer there.
+  if (attrs["mastra.span.type"] === "agent_run") {
+    if (typeof attrs["mastra.agent_run.input"] === "string") out["input"] = attrs["mastra.agent_run.input"];
+    const text = extractText(attrs["mastra.agent_run.output"]);
+    if (text !== undefined) out["output"] = text;
+  }
   return out;
 }
 

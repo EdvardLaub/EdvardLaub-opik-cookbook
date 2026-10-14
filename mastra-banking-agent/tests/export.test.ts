@@ -14,6 +14,12 @@ describe("tidyAttributes", () => {
 
   it("leaves tool spans untouched", () => {
     const attrs = { "mastra.span.type": "tool_call", "gen_ai.tool.name": "getBalance" };
-    expect(tidyAttributes(attrs)).toBe(attrs);
+    expect(tidyAttributes(attrs)).toEqual(attrs);
+  });
+
+  it("maps the AI SDK provider id to the provider name Opik can price", () => {
+    const out = tidyAttributes({ "mastra.span.type": "model_inference", "gen_ai.provider.name": "openai.responses" });
+    expect(out["gen_ai.provider.name"]).toBe("openai");
+    expect(out["gen_ai.system"]).toBe("openai");
   });
 });
