@@ -7,6 +7,7 @@ from openai import AsyncOpenAI
 
 from grantreview.data import FOUNDATION, MAX_GRANT
 from grantreview.models import Application, Score
+from grantreview.tracing import llm_span, record_completion
 
 MODEL = os.getenv("GRANT_MODEL", "gpt-4o-mini")
 
@@ -58,25 +59,25 @@ def letter_prompt(app: Application, decision: str, reasons: list[str]) -> str:
 
 
 async def score_with_llm(app: Application) -> Score:
-    resp = await client().chat.completions.create(
-        model=MODEL,
-        temperature=0,
-        response_format={"type": "json_object"},
-        messages=[
-            {"role": "system", "content": SCORE_SYSTEM},
-            {"role": "user", "content": score_prompt(app)},
-        ],
-    )
+    messages = [
+        {"role": "system", "content": SCORE_SYSTEM},
+        {"role": "user", "content": score_prompt(app)},
+    ]
+    # llm_span makes this call an llm span in the trace, with the prompt, answer and tokens.
+    with llm_span("score-application", MODEL, messages) as span:
+        resp = await client().chat.completions.create(
+            model=MODEL, temperature=0, response_format={"type": "json_object"}, messages=messages
+        )
+        record_completion(span, resp)
     return parse_score(resp.choices[0].message.content or "{}")
 
 
 async def letter_with_llm(app: Application, decision: str, reasons: list[str]) -> str:
-    resp = await client().chat.completions.create(
-        model=MODEL,
-        temperature=0.3,
-        messages=[
-            {"role": "system", "content": LETTER_SYSTEM},
-            {"role": "user", "content": letter_prompt(app, decision, reasons)},
-        ],
-    )
+    messages = [
+        {"role": "system", "content": LETTER_SYSTEM},
+        {"role": "user", "content": letter_prompt(app, decision, reasons)},
+    ]
+    with llm_span("draft-decision-letter", MODEL, messages) as span:
+        resp = await client().chat.completions.create(model=MODEL, temperature=0.3, messages=messages)
+        record_completion(span, resp)
     return (resp.choices[0].message.content or "").strip()
