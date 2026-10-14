@@ -1,0 +1,163 @@
+{
+  "bank": "Larkspur Savings & Trust",
+  "customers": [
+    {
+      "id": "CUS-3001",
+      "name": "Maren Ostrowski"
+    },
+    {
+      "id": "CUS-3002",
+      "name": "Dev Kulkarni"
+    }
+  ],
+  "accounts": [
+    {
+      "id": "ACC-7001",
+      "customerId": "CUS-3001",
+      "type": "checking",
+      "currency": "USD",
+      "balance": 2431.18,
+      "last4": "4417"
+    },
+    {
+      "id": "ACC-7002",
+      "customerId": "CUS-3001",
+      "type": "savings",
+      "currency": "USD",
+      "balance": 15880.0,
+      "last4": "9023"
+    },
+    {
+      "id": "ACC-7003",
+      "customerId": "CUS-3002",
+      "type": "checking",
+      "currency": "USD",
+      "balance": 312.77,
+      "last4": "5560"
+    }
+  ],
+  "cards": [
+    {
+      "id": "CARD-5101",
+      "accountId": "ACC-7001",
+      "customerId": "CUS-3001",
+      "network": "Visa debit",
+      "last4": "8842",
+      "status": "active"
+    },
+    {
+      "id": "CARD-5102",
+      "accountId": "ACC-7002",
+      "customerId": "CUS-3001",
+      "network": "Visa debit",
+      "last4": "1170",
+      "status": "active"
+    },
+    {
+      "id": "CARD-5103",
+      "accountId": "ACC-7003",
+      "customerId": "CUS-3002",
+      "network": "Visa debit",
+      "last4": "3391",
+      "status": "active"
+    }
+  ],
+  "transactions": [
+    {
+      "id": "T-9001",
+      "accountId": "ACC-7001",
+      "date": "2026-10-09",
+      "merchant": "Fernhill Market",
+      "category": "groceries",
+      "amount": -84.12
+    },
+    {
+      "id": "T-9002",
+      "accountId": "ACC-7001",
+      "date": "2026-10-09",
+      "merchant": "Payroll - Quillon Labs",
+      "category": "income",
+      "amount": 2150.0
+    },
+    {
+      "id": "T-9003",
+      "accountId": "ACC-7001",
+      "date": "2026-10-08",
+      "merchant": "Tidewater Coffee",
+      "category": "dining",
+      "amount": -6.45
+    },
+    {
+      "id": "T-9004",
+      "accountId": "ACC-7001",
+      "date": "2026-10-07",
+      "merchant": "Bluejay Streaming",
+      "category": "subscriptions",
+      "amount": -15.99
+    },
+    {
+      "id": "T-9005",
+      "accountId": "ACC-7001",
+      "date": "2026-10-06",
+      "merchant": "Kestrel Fuel",
+      "category": "transport",
+      "amount": -52.3
+    },
+    {
+      "id": "T-9006",
+      "accountId": "ACC-7001",
+      "date": "2026-10-05",
+      "merchant": "Online purchase - Zephyrmart",
+      "category": "shopping",
+      "amount": -219.99
+    },
+    {
+      "id": "T-9007",
+      "accountId": "ACC-7001",
+      "date": "2026-10-03",
+      "merchant": "Fernhill Market",
+      "category": "groceries",
+      "amount": -61.8
+    },
+    {
+      "id": "T-9008",
+      "accountId": "ACC-7002",
+      "date": "2026-10-01",
+      "merchant": "Interest credit",
+      "category": "income",
+      "amount": 11.42
+    },
+    {
+      "id": "T-9009",
+      "accountId": "ACC-7003",
+      "date": "2026-10-09",
+      "merchant": "Corner Laundromat",
+      "category": "services",
+      "amount": -14.0
+    },
+    {
+      "id": "T-9010",
+      "accountId": "ACC-7003",
+      "date": "2026-10-08",
+      "merchant": "Marlow Rent Co.",
+      "category": "housing",
+      "amount": -950.0
+    },
+    {
+      "id": "T-9011",
+      "accountId": "ACC-7003",
+      "date": "2026-10-07",
+      "merchant": "Tidewater Coffee",
+      "category": "dining",
+      "amount": -5.9
+    },
+    {
+      "id": "T-9012",
+      "accountId": "ACC-7003",
+      "date": "2026-10-04",
+      "merchant": "Payroll - Harbor Freight Co-op",
+      "category": "income",
+      "amount": 1120.0
+    }
+  ]
+}

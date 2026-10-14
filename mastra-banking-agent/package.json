@@ -1,0 +1,25 @@
+{
+  "name": "mastra-banking-agent",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "A retail-banking assistant built with Mastra, with every tool call visible as a span in Opik",
+  "engines": { "node": ">=22.13.0" },
+  "scripts": {
+    "demo": "tsx src/demo.ts",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@ai-sdk/openai": "^2.0.42",
+    "@mastra/core": "^1.74.0",
+    "dotenv": "^17.2.0",
+    "zod": "^4.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "tsx": "^4.20.0",
+    "typescript": "^5.9.0",
+    "vitest": "^3.2.0"
+  }
+}
