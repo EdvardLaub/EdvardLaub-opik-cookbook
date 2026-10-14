@@ -3,6 +3,7 @@
 import "./env.ts";
 import { VoltAgent } from "@voltagent/core";
 import { workshopAssistant } from "./agent.ts";
+import { createObservability, PROJECT_NAME } from "./telemetry/index.ts";
 import { loadScenarios } from "./data.ts";
 
 // VoltAgent puts the system prompt inside the messages array, which makes the
@@ -18,8 +19,10 @@ if (!process.env.OPENAI_API_KEY) {
   process.exit(1);
 }
 
+// Passing `observability` is what sends every agent run to Opik over OTLP.
 // No `server` option: this stays a script, not an HTTP service.
-new VoltAgent({ agents: { workshopAssistant } });
+const observability = createObservability();
+new VoltAgent({ agents: { workshopAssistant }, observability });
 
 for (const [i, scenario] of loadScenarios().entries()) {
   console.log(`\n=== ${i + 1}. ${scenario.title} ===`);
@@ -27,4 +30,7 @@ for (const [i, scenario] of loadScenarios().entries()) {
   const result = await workshopAssistant.generateText(scenario.message);
   console.log(`Assistant: ${result.text}`);
 }
+// Flush the batch span processor so the last spans reach Opik before exit.
+await observability.shutdown();
+console.log(`\nDone. Open the "${PROJECT_NAME}" project in Opik to see the traces.`);
 process.exit(0);

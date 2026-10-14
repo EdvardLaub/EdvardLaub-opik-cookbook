@@ -4,13 +4,17 @@
   "private": true,
   "type": "module",
   "description": "A VoltAgent assistant for a bicycle-repair workshop: job tickets, parts stock and booking slots.",
-  "engines": { "node": ">=20.19.0" },
+  "engines": {
+    "node": ">=20.19.0"
+  },
   "scripts": {
     "demo": "tsx src/cli.ts",
     "typecheck": "tsc --noEmit",
     "test": "vitest run"
   },
   "dependencies": {
+    "@opentelemetry/exporter-trace-otlp-http": "0.205.0",
+    "@opentelemetry/sdk-trace-base": "2.1.0",
     "@voltagent/core": "2.11.0",
     "dotenv": "^17.2.0",
     "zod": "^3.25.0"
