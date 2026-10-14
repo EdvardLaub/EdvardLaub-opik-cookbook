@@ -2,9 +2,10 @@ import type { BaseCallbackHandler } from "@langchain/core/callbacks/base";
 import type { BaseChatModel } from "@langchain/core/language_models/chat_models";
 import { StringOutputParser } from "@langchain/core/output_parsers";
 import { ChatPromptTemplate } from "@langchain/core/prompts";
-import { RunnableLambda } from "@langchain/core/runnables";
+import { RunnableLambda, type RunnableConfig } from "@langchain/core/runnables";
 import { tool } from "@langchain/core/tools";
 import { ChatOllama, OllamaEmbeddings } from "@langchain/ollama";
+import { randomUUID } from "node:crypto";
 import { z } from "zod";
 import { loadChunks } from "./loader.js";
 import { VectorStore, type Hit } from "./store.js";
@@ -47,14 +48,19 @@ export class GardenAssistant {
   /**
    * Retrieval as a named LangChain tool. Our vector store is plain TypeScript, not a LangChain
    * retriever, so the callback handler never sees a search on its own. Running it as a tool makes
-   * the callback fire: Opik gets a span of type "tool" named search_garden_docs.
+   * the callback fire: Opik gets a span of type "tool" named search_garden_docs. The artifact
+   * (chunk ids and similarity scores) rides along on the returned ToolMessage.
    */
   private readonly searchTool = tool(
-    async ({ question }) => formatContext(await this.store.search(question, TOP_K)),
+    async ({ question }) => {
+      const hits = await this.store.search(question, TOP_K);
+      return [formatContext(hits), hits] as [string, Hit[]];
+    },
     {
       name: SEARCH_STEP,
       description: "Find the garden rulebook sections that best match a question.",
       schema: z.object({ question: z.string() }),
+      responseFormat: "content_and_artifact",
     },
   );
 
@@ -63,9 +69,16 @@ export class GardenAssistant {
     private readonly llm: BaseChatModel = defaultLlm(),
   ) {}
 
+  /** Run the search tool. `config` carries the callbacks and the parent run, so the span nests correctly. */
+  private search(question: string, config?: RunnableConfig) {
+    // Passing a tool_call (not a bare object) makes the tool return a ToolMessage; Opik's handler
+    // only records a tool span's output when it is a ToolMessage, otherwise the output stays empty.
+    return this.searchTool.invoke({ type: "tool_call", id: randomUUID(), name: SEARCH_STEP, args: { question } }, config);
+  }
+
   /** Retrieval step on its own: the question in, the TOP_K best-matching rulebook sections out. */
   async retrieve(question: string): Promise<Hit[]> {
-    return this.store.search(question, TOP_K);
+    return (await this.search(question)).artifact as Hit[];
   }
 
   /** Pass callbacks (e.g. the Opik handler) to trace the run; omit them and nothing is logged. */
@@ -74,8 +87,8 @@ export class GardenAssistant {
     // The outer runnable is the trace root, so the search tool span and the model call nest under
     // one trace named ask_the_garden; the config it receives carries the parent run into both.
     const run = RunnableLambda.from(async (q: string, config) => {
-      const context = await this.searchTool.invoke({ question: q }, config);
-      return answer.invoke({ context, question: q }, config);
+      const message = await this.search(q, config);
+      return answer.invoke({ context: message.content, question: q }, config);
     }).withConfig({ runName: "ask_the_garden" });
     return run.invoke(question, { callbacks });
   }

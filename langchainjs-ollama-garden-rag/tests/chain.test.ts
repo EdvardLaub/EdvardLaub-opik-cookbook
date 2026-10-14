@@ -4,7 +4,7 @@ import { createHandler } from "../src/tracing.js";
 import { offlineAssistant } from "./helpers.js";
 
 describe("retrieval step", () => {
-  it("returns the best-matching chunks", async () => {
+  it("returns chunk ids and scores through the tool's artifact", async () => {
     const assistant = await offlineAssistant();
     const hits = await assistant.retrieve("When can I plant out tomatoes after the frost?");
     expect(hits[0]?.chunk.source).toBe("planting-calendar");

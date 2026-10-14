@@ -33,10 +33,16 @@ named LangChain tool, `search_garden_docs`, so that it is recorded as its own st
 
 ## See it in Opik
 
-Open the **langchainjs-ollama-garden-rag** project and look at the Traces tab. Each question is one trace called
-`ask_the_garden`. Expand it and you will find a `search_garden_docs` span of type tool (the retrieval step),
-followed by a `ChatPromptTemplate` span, an llm span called `ChatOllama` with model `llama3.2:1b` and the full
-prompt and answer, and an output-parser span.
+Open the **langchainjs-ollama-garden-rag** project and look at the Traces tab. After `npm run demo` there are
+three traces, all named `ask_the_garden`, each taking roughly 50 to 80 seconds on a CPU-only laptop. Open the one
+whose input is "What can't go in the compost bins?" and expand it. It holds six spans: the `ask_the_garden` root
+(general), a `search_garden_docs` span of type tool, a `RunnableSequence` that wraps the answering steps, a
+`ChatPromptTemplate` span, an llm span called `ChatOllama` with model `llama3.2:1b`, and a `StrOutputParser` span.
+
+Click `search_garden_docs`. Its input is the question; its output holds the two chunks that went into the prompt
+(here `composting#what-goes-in-the-bins` and `composting#what-stays-out`) together with their ids and similarity
+scores. That is the span to open when an answer looks wrong: if the right chunk is there, the 1B model fumbled it;
+if not, fix the chunking or the embeddings. The `ChatOllama` span shows the exact prompt and the answer.
 
 The llm span has no token counts and no cost. That is expected: the Ollama integration does not report usage to
 the callback, so with a local model the trace is about *what happened*, not what it cost.
@@ -77,6 +83,17 @@ declares an old peer range for `opik`. Add an override so it uses the `opik` you
 wrote yourself is not one, so its search never reaches the callback and the retrieved text only shows up buried in
 the prompt. Run the search through a named LangChain tool (`tool(...)` in `src/chain.ts`) and invoke it with the
 chain's `config`, so it appears as a tool span nested in the trace.
+
+**The `search_garden_docs` span is there but its output is empty.** The handler records a tool span's output only
+when the tool returns a `ToolMessage`. Calling `searchTool.invoke({ question })` returns a bare string, so the span
+shows the input and nothing else. Invoke the tool with a tool call instead, which returns a `ToolMessage`:
+
+```ts
+await searchTool.invoke({ type: "tool_call", id: randomUUID(), name: "search_garden_docs", args: { question } }, config);
+```
+
+With `responseFormat: "content_and_artifact"` the retrieved chunks' ids and similarity scores travel in the
+message's artifact, and they land on the span as well.
 
 ## How it's put together
 
