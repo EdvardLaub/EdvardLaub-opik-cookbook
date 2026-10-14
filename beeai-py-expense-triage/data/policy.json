@@ -1,0 +1,31 @@
+{
+  "company": "Fernwood Outfitters",
+  "receipt_required_over_usd": 25,
+  "categories": {
+    "meals": {
+      "rule": "Reimbursed up to the city's daily meals per-diem. Receipt required for any single item over the receipt threshold.",
+      "pre_approval_over_usd": null
+    },
+    "lodging": {
+      "rule": "Reimbursed up to the city's nightly lodging per-diem times the number of nights. Itemised hotel folio (receipt) is always required.",
+      "pre_approval_over_usd": null
+    },
+    "ground_transport": {
+      "rule": "Taxi, rideshare and rail are reimbursed at cost. Receipt required over the receipt threshold. Claims that repeat an earlier claim (same date, amount and description) are duplicates and must go to a human.",
+      "pre_approval_over_usd": null
+    },
+    "software": {
+      "rule": "Small tool subscriptions are reimbursed at cost. Receipt required over the receipt threshold. Anything over 100 USD needs pre-approval from the budget owner.",
+      "pre_approval_over_usd": 100
+    },
+    "client_entertainment": {
+      "rule": "Client meals and events need a receipt always and a named client. Anything over 200 USD needs pre-approval from a director.",
+      "pre_approval_over_usd": 200
+    }
+  },
+  "decisions": {
+    "approve": "Within limits, receipt present where required, no duplicate or pre-approval problem.",
+    "needs-receipt": "Otherwise fine, but a required receipt is missing.",
+    "escalate": "Over the per-diem, a likely duplicate, or over a pre-approval limit: a human finance reviewer must decide."
+  }
+}

@@ -1,0 +1,8 @@
+[
+  {"id": "R-1001", "employee_id": "E-2041", "employee": "Priya Raman", "date": "2026-09-22", "city": "Chicago", "category": "meals", "amount_usd": 54.30, "days": 1, "description": "Dinner after the warehouse audit", "has_receipt": true, "expected": "approve"},
+  {"id": "R-1002", "employee_id": "E-2044", "employee": "Tomas Eriksen", "date": "2026-09-25", "city": "Denver", "category": "lodging", "amount_usd": 372.00, "days": 2, "description": "Two nights, regional sales summit", "has_receipt": false, "expected": "needs-receipt"},
+  {"id": "R-1003", "employee_id": "E-2050", "employee": "Mei Tanaka", "date": "2026-09-28", "city": "Boston", "category": "meals", "amount_usd": 142.00, "days": 1, "description": "Dinner for one, harbourfront restaurant", "has_receipt": true, "expected": "escalate"},
+  {"id": "R-1004", "employee_id": "E-2063", "employee": "Jonas Weber", "date": "2026-09-29", "city": "Seattle", "category": "software", "amount_usd": 18.00, "days": 1, "description": "Monthly diagramming-tool subscription", "has_receipt": false, "expected": "approve"},
+  {"id": "R-1005", "employee_id": "E-2057", "employee": "Amara Okafor", "date": "2026-09-14", "city": "Austin", "category": "ground_transport", "amount_usd": 63.20, "days": 1, "description": "Airport taxi to client site", "has_receipt": true, "expected": "escalate"},
+  {"id": "R-1006", "employee_id": "E-2068", "employee": "Luis Ferreira", "date": "2026-09-30", "city": "Seattle", "category": "client_entertainment", "amount_usd": 310.00, "days": 1, "description": "Dinner with Harbor Supply buyers", "has_receipt": true, "expected": "escalate"}
+]

@@ -1,0 +1,7 @@
+{
+  "Chicago": {"meals_per_day": 75, "lodging_per_night": 210},
+  "Denver": {"meals_per_day": 70, "lodging_per_night": 190},
+  "Boston": {"meals_per_day": 80, "lodging_per_night": 260},
+  "Austin": {"meals_per_day": 65, "lodging_per_night": 175},
+  "Seattle": {"meals_per_day": 78, "lodging_per_night": 230}
+}

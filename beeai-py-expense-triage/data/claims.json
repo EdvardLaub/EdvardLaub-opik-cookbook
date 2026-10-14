@@ -1,0 +1,19 @@
+{
+  "E-2041": [
+    {"date": "2026-08-12", "category": "meals", "city": "Chicago", "amount_usd": 61.40, "description": "Team dinner, Chicago offsite", "status": "paid"}
+  ],
+  "E-2044": [
+    {"date": "2026-08-30", "category": "lodging", "city": "Denver", "amount_usd": 380.00, "description": "Two nights, Denver trade show", "status": "paid"}
+  ],
+  "E-2050": [
+    {"date": "2026-09-02", "category": "meals", "city": "Boston", "amount_usd": 74.10, "description": "Lunch with vendor", "status": "paid"},
+    {"date": "2026-09-03", "category": "meals", "city": "Boston", "amount_usd": 79.00, "description": "Dinner", "status": "paid"}
+  ],
+  "E-2057": [
+    {"date": "2026-09-14", "category": "ground_transport", "city": "Austin", "amount_usd": 63.20, "description": "Airport taxi to client site", "status": "paid"}
+  ],
+  "E-2063": [],
+  "E-2068": [
+    {"date": "2026-07-21", "category": "client_entertainment", "city": "Seattle", "amount_usd": 140.00, "description": "Client lunch, Harbor Supply", "status": "paid"}
+  ]
+}
