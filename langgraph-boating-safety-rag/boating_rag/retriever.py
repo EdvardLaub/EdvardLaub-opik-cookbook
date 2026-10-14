@@ -2,6 +2,7 @@
 
 import os
 
+import opik
 from langchain_core.embeddings import Embeddings
 from langchain_core.vectorstores import InMemoryVectorStore
 from langchain_openai import OpenAIEmbeddings
@@ -17,6 +18,10 @@ def build_retriever(embeddings: Embeddings | None = None, k: int | None = None):
     return store.as_retriever(search_kwargs={"k": k})
 
 
+# OpikTracer does not log the LangChain retriever run here (the retrieve node
+# has no child span), so we wrap the lookup ourselves: this adds a "tool" span
+# named vector_search under retrieve, with the question as input and the chunks as output.
+@opik.track(name="vector_search", type="tool")
 def search(retriever, question: str) -> list[str]:
     """Return the text of the top-k chunks for a question."""
     return [doc.page_content for doc in retriever.invoke(question)]

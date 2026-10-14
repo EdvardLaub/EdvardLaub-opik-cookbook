@@ -18,7 +18,8 @@ fetch the right passages, and did the answer stay inside them?
 The app is split into small modules:
 
 - a **corpus loader** that cuts five markdown chapters into one chunk per section,
-- a **retriever** (in-memory vector store, OpenAI embeddings, top-3),
+- a **retriever** (in-memory vector store, OpenAI embeddings, top-3) whose
+  lookup is a named `@opik.track(type="tool")` function,
 - a two-node **LangGraph** graph, `retrieve` then `generate` (`gpt-4o-mini`),
 - an **eval** module with an 8-question Opik dataset and an experiment scored by
   the `Hallucination` and `ContextPrecision` judges.
@@ -28,10 +29,11 @@ The app is split into small modules:
 Open the `langgraph-boating-safety-rag` project. The **Traces** tab holds 12
 traces after one run: 4 named `LangGraph` (the demo questions) and 8 named
 `evaluation_task` (one per dataset item). Click a `LangGraph` trace: the tree
-has `retrieve` and `generate` node spans, and under `generate` a `ChatOpenAI`
-span of type `llm` with the exact prompt, the handbook excerpts, token usage
-and cost (about $0.00006 to $0.0002 per call). The `retrieve` span's output is
-the three chunks fetched.
+has `retrieve` and `generate` node spans. Under `retrieve` sits a `vector_search`
+span of type `tool` whose output is the three handbook chunks fetched; under
+`generate` a `ChatOpenAI` span of type `llm` with the exact prompt, the
+excerpts, token usage and cost (about $0.00004 to $0.0002 per call). Between
+them you can tell a search miss from a model that ignored good excerpts.
 
 Under **Experiments**, `rag-top3` links to the `boating-safety-questions`
 dataset (8 items). Its averages: `hallucination_metric` 0.00 (nothing
@@ -61,11 +63,23 @@ A full run takes about 30 seconds and costs well under a cent.
 inside the `retrieve` node. `InMemoryVectorStore` imports numpy lazily and
 `langchain-core` does not depend on it. Add `numpy` to your dependencies.
 
+**The `retrieve` span is empty: no child shows the vector search.** With
+`track_langgraph` (opik 2.2.100, langchain-core 1.6) the retriever's own run
+never reaches Opik, so you see the node but not what it fetched. Wrap the
+lookup in a tracked function:
+
+```python
+@opik.track(name="vector_search", type="tool")
+def search(retriever, question): ...
+```
+
+It nests under the node span automatically.
+
 ## How it's put together
 
 - `main.py`: demo questions, then the experiment; sets the Opik project and flushes.
 - `boating_rag/corpus.py`: splits the handbook into section chunks.
-- `boating_rag/retriever.py`: embeds chunks, returns the top-k.
+- `boating_rag/retriever.py`: embeds chunks, returns the top-k, traced as a `vector_search` tool span.
 - `boating_rag/graph.py`: the retrieve/generate graph, wrapped with `track_langgraph`.
 - `boating_rag/evaluation.py`: dataset items, task wrapper, `evaluate()` call.
 - `data/`: five fictional handbook chapters.
