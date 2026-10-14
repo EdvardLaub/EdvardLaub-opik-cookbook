@@ -28,7 +28,7 @@ def _terms(text: str) -> set[str]:
     return set(re.findall(r"[a-z0-9]+", text.lower())) - STOPWORDS
 
 
-def search(corpus: list[dict], query: str, k: int = 3) -> list[dict]:
+def search(corpus: list[dict], query: str, k: int = 4) -> list[dict]:
     """Rank sections by rarity-weighted overlap with the query terms."""
     docs = [_terms(e["text"]) for e in corpus]
 

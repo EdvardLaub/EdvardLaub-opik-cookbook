@@ -7,7 +7,7 @@ from langchain_core.language_models.fake_chat_models import FakeListChatModel
 from postmortem.checks import score_postmortem
 from postmortem.corpus import load_corpus, search
 from postmortem.costs import cost_by_agent
-from postmortem.team import InvestigationPlan, build_graph, format_notes
+from postmortem.team import EvidenceQuestion, InvestigationPlan, build_graph, format_notes
 
 
 def test_corpus_has_four_sources():
@@ -30,7 +30,7 @@ class ScriptedModel(FakeListChatModel):
     """Fake chat model that also supports with_structured_output for the planner."""
 
     def with_structured_output(self, schema, **kw):
-        qs = ["q1", "q2"]
+        qs = [EvidenceQuestion(question=q, search_terms=q) for q in ("q1", "q2")]
         return SimpleNamespace(invoke=lambda msgs: InvestigationPlan(questions=qs))
 
 
@@ -46,6 +46,8 @@ def test_score_postmortem():
     good = "Root cause: db.pool.maxConnections went from 100 to 10. Canary skipped; rollback approval slow; no pool alert."
     s = score_postmortem(good)
     assert s["root_cause_named"] == 1.0 and s["contributing_factors"] == 1.0 and s["blameless"] == 1.0
+    assert score_postmortem("It reduced the maximum database connections from 100 to 10.")["root_cause_named"] == 1.0
+    assert score_postmortem("It lowered minIdle from 20 to 10.")["root_cause_named"] == 0.0
     assert score_postmortem("The engineer should have caught it.")["blameless"] == 0.0
 
 
@@ -64,3 +66,13 @@ def test_cost_rolls_up_to_agents():
     out = cost_by_agent(spans)
     assert out["investigator"] == {"passes": 2, "llm_calls": 2, "tokens": 500, "cost": 0.005}
     assert out["planner"]["cost"] == 0.001 and out["writer"]["tokens"] == 900
+
+
+def test_recovery_search_terms_reach_the_rollback_evidence():
+    # The prose question retrieved r4409 and early chat; the evidence vocabulary finds the rollback.
+    prose = "What obstacles did the team encounter during the recovery process that delayed the restoration?"
+    terms = "rollback approval approver deployctl phone second platform lead"
+    corpus = load_corpus()
+    texts = lambda q: " ".join(e["text"] for e in search(corpus, q))
+    assert "Rollback rolling" not in texts(prose)
+    assert "Rollback rolling" in texts(terms)

@@ -16,8 +16,8 @@ def make_retrieve():
     # sections out. Plain functions are invisible to OpikTracer; this also keeps retrieval
     # visible should the tracer drop a LangChain retriever run.
     @opik.track(name="search_evidence", type="tool", project_name=PROJECT_NAME)
-    def search_evidence(question: str) -> list[dict]:
-        return search(corpus, question)
+    def search_evidence(query: str) -> list[dict]:
+        return search(corpus, query)
 
     return search_evidence
 

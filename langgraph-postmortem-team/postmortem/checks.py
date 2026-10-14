@@ -3,7 +3,9 @@
 import re
 
 # Facts a correct post-mortem must carry, taken from the evidence in data/.
-ROOT_CAUSE = r"maxconnections.{0,80}\b100\b.{0,30}\b10\b"  # pool max 100 -> 10, not minIdle
+ROOT_CAUSE = (  # pool max 100 -> 10, not minIdle
+    r"(max\w*[ .]?(db\.pool\.)?(database )?connections?|pool (size|limit|maximum)).{0,80}\b100\b.{0,30}\b10\b"
+)
 CONTRIBUTING = {
     "canary": r"canary",
     "rollback_approval": r"(second|secondary) approver|rollback approval|approval",

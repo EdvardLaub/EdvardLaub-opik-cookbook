@@ -19,14 +19,23 @@ class Finding(TypedDict):
 class TeamState(TypedDict):
     incident: str
     questions: list[str]
+    queries: list[str]
     findings: list[Finding]
     postmortem: str
+
+
+class EvidenceQuestion(BaseModel):
+    question: str = Field(description="A focused evidence question about the incident")
+    search_terms: str = Field(
+        description="6-10 literal words likely to appear in the logs, deploy notes, alerts or chat "
+        "(e.g. deploy, rollback, approver, canary, pool, paged, acked, hypothesis, status page), not words from the question itself"
+    )
 
 
 class InvestigationPlan(BaseModel):
     """The planner's output: the evidence questions the investigators must answer."""
 
-    questions: list[str] = Field(description="4 focused evidence questions about the incident")
+    questions: list[EvidenceQuestion] = Field(description="4 evidence questions")
 
 
 def build_graph(llm: BaseChatModel, retrieve: Callable[[str], list[dict]] | None = None):
@@ -44,12 +53,18 @@ def build_graph(llm: BaseChatModel, retrieve: Callable[[str], list[dict]] | None
              "diagnosis took as long as they did; and what slowed recovery."),
             ("user", state["incident"]),
         ])
-        return {"questions": plan.questions, "findings": []}
+        return {
+            "questions": [q.question for q in plan.questions],
+            "queries": [q.search_terms for q in plan.questions],
+            "findings": [],
+        }
 
     def investigator(state: TeamState) -> dict:
         # One pass per question: the loop the agent graph draws as a self-edge.
         question = state["questions"][len(state["findings"])]
-        hits = retrieve(question)
+        # Search with the question plus the planner's evidence vocabulary: question prose alone
+        # ("obstacles", "restoration") matches nothing in logs and chat and returned the wrong sections.
+        hits = retrieve(f"{question} {state['queries'][len(state['findings'])]}")
         excerpts = "\n\n---\n\n".join(f"[{h['source']}]\n{h['text']}" for h in hits)
         answer = llm.invoke([
             ("system",
@@ -73,7 +88,7 @@ def build_graph(llm: BaseChatModel, retrieve: Callable[[str], list[dict]] | None
              "Root cause, Contributing factors, What went well, Action items. Describe "
              "people only by role (on-call engineer, incident commander), never by name, "
              "and frame causes as gaps in systems and process, not individual mistakes. "
-             "Use only the notes below, keep every timestamp and number exact. Under 600 words.\n\n"
+             "List timeline events in chronological order. Use only the notes below, keep every timestamp and number exact. Under 600 words.\n\n"
              + notes),
             ("user", state["incident"]),
         ])
