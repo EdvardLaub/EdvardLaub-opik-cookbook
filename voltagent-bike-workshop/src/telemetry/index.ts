@@ -3,6 +3,7 @@
 import { VoltAgentObservability } from "@voltagent/core";
 import { BatchSpanProcessor } from "@opentelemetry/sdk-trace-base";
 import { OTLPTraceExporter } from "@opentelemetry/exporter-trace-otlp-http";
+import { AgentRunAggregator } from "./aggregate.ts";
 import { GenAIMappingExporter } from "./exporter.ts";
 
 export const PROJECT_NAME = process.env.OPIK_PROJECT_NAME ?? "voltagent-bike-workshop";
@@ -32,7 +33,10 @@ export function createObservability(): VoltAgentObservability {
   return new VoltAgentObservability({
     serviceName: "voltagent-bike-workshop",
     spanProcessors: [
-      new BatchSpanProcessor(new GenAIMappingExporter(new OTLPTraceExporter({ url: otlpUrl(), headers }))),
+      // Aggregator first (fix up usage per agent run), then batch -> map -> OTLP.
+      new AgentRunAggregator(
+        new BatchSpanProcessor(new GenAIMappingExporter(new OTLPTraceExporter({ url: otlpUrl(), headers }))),
+      ),
     ],
   });
 }

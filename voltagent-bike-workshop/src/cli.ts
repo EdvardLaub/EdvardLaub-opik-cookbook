@@ -29,6 +29,8 @@ for (const [i, scenario] of loadScenarios().entries()) {
   console.log(`Customer:  ${scenario.message}`);
   const result = await workshopAssistant.generateText(scenario.message);
   console.log(`Assistant: ${result.text}`);
+  // Total tokens for the whole run (all model steps), to compare with Opik.
+  console.log(`(tokens this request: ${result.totalUsage?.totalTokens})`);
 }
 // Flush the batch span processor so the last spans reach Opik before exit.
 await observability.shutdown();

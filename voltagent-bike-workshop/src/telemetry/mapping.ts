@@ -53,6 +53,12 @@ export function mapSpanAttributes(attrs: Attrs): Attrs {
     }
     const messages = toGenAIMessages(attrs["llm.messages"]);
     if (messages) out["gen_ai.input.messages"] = messages;
+    // llm.output is filled in by AgentRunAggregator (the llm span has none).
+    if (typeof attrs["llm.output"] === "string") {
+      out["gen_ai.output.messages"] = JSON.stringify([
+        { role: "assistant", parts: [{ type: "text", content: attrs["llm.output"] }] },
+      ]);
+    }
   } else if (attrs["span.type"] === "tool") {
     // gen_ai.tool.* makes Opik type the span as a tool call, with the
     // arguments as its input and the tool's return value as its output.

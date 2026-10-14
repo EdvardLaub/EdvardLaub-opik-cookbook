@@ -26,12 +26,13 @@ for (const t of traces.reverse()) {
   for (const s of llm) {
     const cost = s.total_estimated_cost;
     console.log(`    llm  ${s.model} tokens=${JSON.stringify(s.usage?.total_tokens)} cost=$${cost}`);
-    if (!s.usage?.total_tokens || !cost) missing++;
+    console.log(`         output: ${JSON.stringify(s.output ?? null).slice(0, 70)}`);
+    if (!s.usage?.total_tokens || !cost || !s.output) missing++;
   }
   console.log(`    tool ${tools.map((s) => s.name).join(", ") || "(none)"}`);
 }
 if (traces.length === 0 || missing > 0) {
-  console.error("FAIL: no traces, or an llm span without usage/cost");
+  console.error("FAIL: no traces, or an llm span without usage, cost or output");
   process.exit(1);
 }
-console.log("OK: every llm span has token usage and an estimated cost");
+console.log("OK: every llm span has token usage, an estimated cost and an output");
