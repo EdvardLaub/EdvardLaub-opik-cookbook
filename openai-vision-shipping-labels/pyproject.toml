@@ -1,0 +1,17 @@
+[project]
+name = "openai-vision-shipping-labels"
+version = "0.1.0"
+description = "GPT-4o-mini vision reads shipping-label images drawn locally with Pillow, including skewed, smudged and hand-corrected ones"
+requires-python = ">=3.12"
+dependencies = [
+    "openai>=2.54",
+    "pillow>=12.3",
+    "python-dotenv>=1.0",
+]
+
+[dependency-groups]
+dev = ["pytest>=8"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]

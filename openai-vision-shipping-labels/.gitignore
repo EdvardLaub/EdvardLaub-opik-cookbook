@@ -1,0 +1,8 @@
+__pycache__/
+*.py[oc]
+.venv/
+.env
+uv.lock
+.pytest_cache/
+# Generated label images: the app redraws them from labels.py on every run
+labels/
