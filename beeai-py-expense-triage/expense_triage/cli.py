@@ -12,11 +12,13 @@ from pathlib import Path
 from dotenv import load_dotenv
 
 from expense_triage import data
+from expense_triage.scoring import grade, summary_line
 from expense_triage.tracing import setup_tracing
 
 
 def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     p = argparse.ArgumentParser(prog="expense-triage", description=__doc__.splitlines()[0])
+    p.add_argument("--max-iterations", type=int, default=8, help="ReAct iteration budget (try 2 to starve the agent)")
     p.add_argument("--no-trace", action="store_true", help="do not export spans to Opik")
     p.add_argument("report_id", nargs="?", help="a report id such as R-1003 (default: all)")
     return p.parse_args(argv)
@@ -29,16 +31,24 @@ def select(report_id: str | None) -> list[dict]:
     return chosen
 
 
-async def run(reports: list[dict]) -> list[tuple[dict, str | None]]:
+async def run(reports: list[dict], max_iterations: int) -> list:
     from expense_triage.agent import triage_report
 
     results = []
     for report in reports:
         print(f"\n=== {report['id']}: {report['employee']}, {report['category']} {report['amount_usd']:.2f} USD ({report['city']})")
-        decision, text = await triage_report(report)
-        print(text)
-        results.append((report, decision))
+        result = await triage_report(report, max_iterations=max_iterations)
+        print(result.text)
+        results.append(result)
     return results
+
+
+def print_grades(results: list) -> None:
+    print("\nGraded against the expected decisions:")
+    for r in results:
+        score, reason = grade(r)
+        print(f"  {'PASS' if score else 'FAIL'}  {r.report['id']}  {reason}  tools={r.tools_called}")
+    print(summary_line(results))
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -49,12 +59,16 @@ def main(argv: list[str] | None = None) -> int:
     load_dotenv(here / ".env")
     os.environ.pop("OPENAI_BASE_URL", None)  # talk to the public API
     provider = None if args.no_trace else setup_tracing()
-    asyncio.run(run(select(args.report_id)))
+    results = asyncio.run(run(select(args.report_id), args.max_iterations))
+    print_grades(results)
     if provider is not None:
         # BatchSpanProcessor exports in the background; without this flush the last spans
         # can be lost when the process exits and the final trace shows up incomplete.
         provider.force_flush()
         provider.shutdown()
+        from expense_triage.feedback import attach_scores
+
+        print(f"Scored {attach_scores(results)} traces in Opik (decision_correct, tool_calls).")
         print('\nDone. Open the "beeai-py-expense-triage" project in Opik to see the traces.')
     return 0
 
