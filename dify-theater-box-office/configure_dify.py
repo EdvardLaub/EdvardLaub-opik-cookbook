@@ -4,7 +4,8 @@
 Everything the Dify UI does, it does through the console API, so this script
 does the same: create the admin account, install the OpenAI plugin, store the
 OpenAI key, import the box-office app from the committed DSL, and mint a
-service API key for demo.sh.
+service API key for demo.sh, and turn on Dify's built-in Opik tracing for the
+app (no app code involved).
 
 Idempotent: every step checks before it creates, so re-running is safe.
 Standard library only, no dependencies to install (works on Python 3.9+).
@@ -39,6 +40,15 @@ MARKETPLACE_PLUGIN_API = "https://marketplace.dify.ai/api/v1/plugins/langgenius/
 OPENAI_PLUGIN_FALLBACK = (
     "langgenius/openai:1.0.5@51583313a5988d5dca405063831ffeeacdc1f2e95f32a8c10b4c281ceef39ebb"
 )
+
+# Where Dify's containers reach a locally running Opik. From inside Docker,
+# "localhost" is the container itself, so the host is host.docker.internal.
+OPIK_URL = os.environ.get("OPIK_URL_FOR_DIFY", "http://host.docker.internal:5173/api/")
+OPIK_WORKSPACE = os.environ.get("OPIK_WORKSPACE", "default")
+OPIK_PROJECT = os.environ.get("OPIK_PROJECT_NAME", "dify-theater-box-office")
+# Local Opik needs no key. For Comet Cloud set OPIK_API_KEY and
+# OPIK_URL_FOR_DIFY=https://www.comet.com/opik/api/ plus your OPIK_WORKSPACE.
+OPIK_API_KEY = os.environ.get("OPIK_API_KEY", "")
 
 
 def log(msg: str) -> None:
@@ -207,6 +217,35 @@ def ensure_app() -> str:
     return app_id
 
 
+def ensure_opik_tracing(app_id: str) -> None:
+    # This is the whole Opik integration: the same four fields as the app's
+    # Monitoring > Tracing panel. Dify then sends every chat message to Opik
+    # as a trace (with an llm span inside), and uses the Dify conversation id
+    # as the Opik thread id. Nothing is added to the app itself.
+    tracing_config = {
+        "api_key": OPIK_API_KEY,
+        "project": OPIK_PROJECT,
+        "workspace": OPIK_WORKSPACE,
+        "url": OPIK_URL,
+    }
+    status, body = request("GET", f"{CONSOLE}/apps/{app_id}/trace-config?tracing_provider=opik")
+    already = status == 200 and body.get("tracing_provider") == "opik" and not body.get("has_not_configured")
+    method = "PATCH" if already else "POST"
+    payload = {"tracing_provider": "opik", "tracing_config": tracing_config}
+    status, body = request(method, f"{CONSOLE}/apps/{app_id}/trace-config", body=payload)
+    if status not in (200, 201):
+        sys.exit(f"ERROR: writing the Opik trace config failed ({status}): {body}")
+    log(f"Opik trace config saved (project '{OPIK_PROJECT}', workspace '{OPIK_WORKSPACE}')"
+        + (" [updated]" if already else " [created]"))
+
+    # The config alone does nothing; this switch is what starts the traces.
+    status, body = request("POST", f"{CONSOLE}/apps/{app_id}/trace",
+                           body={"enabled": True, "tracing_provider": "opik"})
+    if status != 200:
+        sys.exit(f"ERROR: enabling tracing failed ({status}): {body}")
+    log("Tracing enabled for the app (provider: opik)")
+
+
 def ensure_service_key(app_id: str) -> str:
     if STATE_PATH.exists():
         state = json.loads(STATE_PATH.read_text())
@@ -232,6 +271,7 @@ def main() -> None:
     ensure_openai_plugin()
     ensure_openai_credential(openai_api_key)
     app_id = ensure_app()
+    ensure_opik_tracing(app_id)
     app_api_key = ensure_service_key(app_id)
 
     STATE_PATH.write_text(json.dumps({
