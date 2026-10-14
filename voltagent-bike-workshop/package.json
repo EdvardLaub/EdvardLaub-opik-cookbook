@@ -9,6 +9,7 @@
   },
   "scripts": {
     "demo": "tsx src/cli.ts",
+    "verify": "tsx src/verify.ts",
     "typecheck": "tsc --noEmit",
     "test": "vitest run"
   },
