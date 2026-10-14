@@ -17,10 +17,19 @@ load_dotenv(HERE / ".env")
 # Always talk to the public OpenAI API, even if a proxy URL is inherited.
 os.environ.pop("OPENAI_BASE_URL", None)
 
+PROJECT_NAME = "openai-vision-shipping-labels"
+# Every trace lands in this Opik project (read by the SDK at first use).
+os.environ["OPIK_PROJECT_NAME"] = PROJECT_NAME
+
+import opik  # noqa: E402
 from openai import OpenAI  # noqa: E402
+from opik import Attachment, opik_context  # noqa: E402
+from opik.integrations.openai import track_openai  # noqa: E402
 
 MODEL = "gpt-4o-mini"
-client = OpenAI()
+# track_openai wraps the client: every chat completion becomes an llm span
+# (with the image prompt, token usage and estimated cost) under the trace.
+client = track_openai(OpenAI(), project_name=PROJECT_NAME)
 
 SYSTEM_PROMPT = """\
 You read photos and scans of parcel shipping labels and extract typed fields.
@@ -69,8 +78,17 @@ FIELDS_SCHEMA: dict[str, Any] = {
 }
 
 
+# @opik.track makes each call one trace (input = image path, output = fields)
+# and gives the llm span above a parent to nest under.
+@opik.track(project_name=PROJECT_NAME)
 def extract_label(image_path: str) -> dict[str, Any]:
     """One extraction: label PNG in, typed fields out."""
+    # Attach the PNG to the trace: the Opik UI shows the exact pixels the
+    # model saw next to what it read. Without it the trace only has a path.
+    opik_context.update_current_trace(
+        attachments=[Attachment(data=image_path, content_type="image/png")],
+        metadata={"label_id": Path(image_path).stem},
+    )
     image_b64 = base64.b64encode(Path(image_path).read_bytes()).decode()
     response = client.chat.completions.create(
         model=MODEL,

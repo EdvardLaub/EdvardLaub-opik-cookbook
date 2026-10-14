@@ -1,6 +1,8 @@
 """Draw eight shipping labels, extract typed fields from each with GPT-4o-mini
 vision, and print a per-field scoreboard against the known ground truth."""
 
+import opik
+
 from extractor import MODEL, extract_label
 from labels import LABELS, render_all
 from scoring import FIELDS, score_extraction
@@ -21,6 +23,9 @@ def main() -> None:
     print("\nField accuracy:")
     for field in FIELDS:
         print(f"  {field:<16} {totals[field]}/{len(LABELS)}")
+    # Traces and attachments upload in the background; flush before exiting
+    # or the last ones can be lost.
+    opik.flush_tracker()
 
 
 if __name__ == "__main__":
