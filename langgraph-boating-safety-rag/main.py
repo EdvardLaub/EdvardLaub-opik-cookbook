@@ -1,4 +1,4 @@
-"""Ask the boating-safety assistant a few questions."""
+"""Ask the boating-safety assistant a few questions, then score it on a dataset."""
 
 import os
 
@@ -11,6 +11,7 @@ import opik
 
 dotenv.load_dotenv(dotenv.find_dotenv(usecwd=True))  # OPENAI_API_KEY
 
+from boating_rag.evaluation import run_experiment
 from boating_rag.graph import build_graph
 
 QUESTIONS = [
@@ -23,9 +24,21 @@ QUESTIONS = [
 
 def main() -> None:
     app = build_graph()
+
+    # 1. Ask a few questions: each one is a trace in Opik.
     for question in QUESTIONS:
         result = app.invoke({"question": question})
         print(f"Q: {question}\nA: {result['answer']}\n")
+
+    # 2. Score the same graph on the dataset: one experiment in Opik.
+    evaluation = run_experiment(app)
+    scores = evaluation.aggregate_evaluation_scores().aggregated_scores
+    print(f"Experiment scores (mean over {len(evaluation.test_results)} questions):")
+    for name, stats in scores.items():
+        print(f"  {name}: {stats.mean:.2f}")
+    if evaluation.experiment_url:
+        print(f"\nExperiment: {evaluation.experiment_url}")
+
     # Traces are sent from a background thread; flush so none are lost on exit.
     opik.flush_tracker()
 
