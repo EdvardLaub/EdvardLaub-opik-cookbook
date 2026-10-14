@@ -5,6 +5,7 @@ description = "Overnight voicemail triage for a fictional vet clinic: TTS voicem
 requires-python = ">=3.12"
 dependencies = [
     "openai>=2.0",
+    "opik>=2.2.100",
     "python-dotenv>=1.0",
 ]
 

@@ -2,6 +2,8 @@
 
 import json
 
+import opik
+
 from triage import AUDIO_DIR, OUT_DIR, build_callback_list, triage_voicemail
 from voicemails import VOICEMAILS
 
@@ -25,6 +27,10 @@ def main() -> None:
             f"tel {r['phone'] or '?'} - call within {r['callback_within']}\n"
             f"            {r['reason']}"
         )
+
+    # Traces ship from a background thread; flush so none are lost at exit.
+    opik.flush_tracker()
+    print("\nDone. Open the whisper-vet-voicemail-triage project in Opik.")
 
 
 if __name__ == "__main__":

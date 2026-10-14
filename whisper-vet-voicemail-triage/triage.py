@@ -4,6 +4,15 @@ For each fictional voicemail we synthesize an MP3 with OpenAI TTS (the
 "answering machine"), transcribe it with Whisper, and have gpt-4o-mini sort
 it into emergency / same-day / routine with the caller details a nurse needs
 to ring them back.
+
+Each voicemail is one trace in the "whisper-vet-voicemail-triage" project:
+
+    triage-voicemail                 <- trace root, MP3 attached, urgency tag
+    |- synthesize-voicemail          <- TTS (stands in for the answering machine)
+    |  '- audio.speech.create        <- logged by track_openai
+    |- transcribe                    <- whisper-1 (the span's output is the transcript)
+    '- classify                      <- gpt-4o-mini -> urgency + callback details
+       '- chat_completion_create     <- logged by track_openai (tokens, cost)
 """
 
 import json
@@ -19,8 +28,14 @@ OUT_DIR = EXAMPLE_DIR / "out"
 load_dotenv(EXAMPLE_DIR.parent / ".env")
 load_dotenv(EXAMPLE_DIR / ".env")
 os.environ.pop("OPENAI_BASE_URL", None)
+# Pin the Opik project before opik is imported: every trace lands here
+# instead of the "Default Project".
+os.environ["OPIK_PROJECT_NAME"] = "whisper-vet-voicemail-triage"
 
+import opik
 from openai import OpenAI
+from opik import Attachment, opik_context
+from opik.integrations.openai import track_openai
 
 TTS_MODEL = "gpt-4o-mini-tts"
 TRANSCRIBE_MODEL = "whisper-1"
@@ -54,9 +69,16 @@ Urgency rules:
 When in doubt between two levels, pick the more urgent one.
 """
 
-_client = OpenAI()
+# track_openai wraps the client: every TTS, Whisper and chat call becomes a
+# child span (llm type, with token usage and cost) for TTS and chat calls,
+# nested under the running @opik.track function. Whisper calls are not wrapped,
+# which is why `transcribe` is tracked by hand below.
+_client = track_openai(OpenAI())
 
 
+# @opik.track opens a general span named after the function; its arguments
+# and return value show up as the span input and output.
+@opik.track(name="synthesize-voicemail")
 def synthesize_voicemail(voicemail: dict, audio_path: Path) -> Path:
     """Speak the script with OpenAI TTS and save it as an MP3."""
     response = _client.audio.speech.create(
@@ -69,6 +91,7 @@ def synthesize_voicemail(voicemail: dict, audio_path: Path) -> Path:
     return audio_path
 
 
+@opik.track(name="transcribe")
 def transcribe(audio_path: Path) -> str:
     """Speech-to-text with Whisper; the transcript is plain text."""
     with audio_path.open("rb") as audio_file:
@@ -100,6 +123,7 @@ def parse_triage(raw: str) -> dict:
     }
 
 
+@opik.track(name="classify")
 def classify(transcript: str) -> dict:
     """Transcript -> structured triage decision with gpt-4o-mini."""
     response = _client.chat.completions.create(
@@ -113,12 +137,25 @@ def classify(transcript: str) -> dict:
     return parse_triage(response.choices[0].message.content)
 
 
+# The root @opik.track makes one voicemail = one trace; the nested tracked
+# calls below become its spans.
+@opik.track(name="triage-voicemail")
 def triage_voicemail(voicemail: dict) -> dict:
     """The full pipeline for one voicemail."""
     audio_path = AUDIO_DIR / f"{voicemail['id']}.mp3"
     synthesize_voicemail(voicemail, audio_path)
     transcript = transcribe(audio_path)
     decision = classify(transcript)
+
+    # Attach the MP3 to the trace (Attachments tab, playable in the browser)
+    # and tag it with the verdict so the traces table can be filtered by
+    # urgency. Without the attachment all you have is the transcript, never
+    # the voice that left it.
+    opik_context.update_current_trace(
+        attachments=[Attachment(data=str(audio_path), content_type="audio/mpeg")],
+        tags=[decision["urgency"]],
+        metadata={"voice": voicemail["voice"], "received": voicemail["received"]},
+    )
     return {
         "id": voicemail["id"],
         "received": voicemail["received"],
