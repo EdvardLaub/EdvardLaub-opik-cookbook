@@ -4,8 +4,9 @@ version = "0.1.0"
 description = "A planner, investigators and writer team in LangGraph that drafts a blameless incident post-mortem from offline evidence"
 requires-python = ">=3.12"
 dependencies = [
-    "langchain-openai>=0.3",
-    "langgraph>=0.6",
+    "langchain-openai>=1.7",
+    "langgraph>=1.2",
+    "opik>=2.2.100",
     "python-dotenv>=1.0",
 ]
 
