@@ -1,0 +1,27 @@
+[project]
+name = "temporal-py-grant-review"
+version = "0.1.0"
+description = "Durable grant-application review on Temporal (Python) with OpenAI, traced across client and worker processes in Opik"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "openai>=3.31.0",
+    "python-dotenv>=1.2.4",
+    "temporalio>=1.34.0",
+]
+
+[project.scripts]
+grant-review = "grantreview.demo:main"
+
+[dependency-groups]
+dev = ["pytest>=8.0"]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["grantreview"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
