@@ -1,0 +1,13 @@
+{
+  "note": "Fictional sky-events calendar for the Lantern Ridge Astronomy Circle. Dates and times are invented.",
+  "events": [
+    { "date": "2026-11-04", "title": "Lantern Ridge New Moon Night", "kind": "moon", "detail": "New Moon at 22:14 local time. The Ridge hut opens at 19:00 for a dark-sky session; Marlow and Pip are both on the field." },
+    { "date": "2026-11-12", "title": "Taurid Glow Meteors", "kind": "meteor-shower", "detail": "A fictional shower peaking after 23:00 with about 8 meteors per hour from a radiant in Taurus. A reclining chair and a blanket beat any telescope." },
+    { "date": "2026-11-19", "title": "Jupiter at Opposition", "kind": "planet", "detail": "Jupiter is brightest and highest around midnight. Marlow at 100x shows the cloud belts and four moons. Hollis seeing of 4 or better is forecast." },
+    { "date": "2026-11-26", "title": "Moon Passes Pleiades", "kind": "conjunction", "detail": "The waxing gibbous Moon sits half a degree from the Pleiades at 21:30; expect glare, so use Pip at 18x for the pairing." },
+    { "date": "2026-12-03", "title": "Circle Annual Collimation Clinic", "kind": "club", "detail": "Bring your own telescope to the Ridge hut at 18:00. Marlow's mirror cell gets its yearly adjustment." },
+    { "date": "2026-12-14", "title": "Ember Meteors Peak", "kind": "meteor-shower", "detail": "A fictional winter shower with about 40 meteors per hour, peaking 01:00 to 03:00. Moon is a thin crescent and sets early, so skies are dark." },
+    { "date": "2027-01-09", "title": "Saturn Ring Tilt Night", "kind": "planet", "detail": "Saturn's rings tilt open to about 14 degrees. Marlow at 100x shows the Cassini-style gap on a Hollis 4 night." },
+    { "date": "2027-01-22", "title": "Partial Lunar Eclipse", "kind": "eclipse", "detail": "Partial eclipse begins 20:41, maximum at 21:58 with 63 percent of the Moon in shadow, ends 23:15. Safe to watch with the naked eye, binoculars or Pip." }
+  ]
+}
