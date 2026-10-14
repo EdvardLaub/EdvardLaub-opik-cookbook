@@ -1,5 +1,12 @@
+import { config } from "dotenv";
 import { fileURLToPath } from "node:url";
+import { createHandler, PROJECT } from "./tracing.js";
 import { GardenAssistant, buildStore, CHAT_MODEL, OLLAMA_URL } from "./chain.js";
+
+// Load this folder's .env, then the repo-root .env. dotenv never overrides variables already set.
+// Opik reads OPIK_URL_OVERRIDE / OPIK_WORKSPACE (and OPIK_API_KEY for Opik Cloud) from the environment.
+const here = fileURLToPath(new URL(".", import.meta.url));
+config({ path: [`${here}../.env`, `${here}../../.env`], quiet: true });
 
 const DOCS_DIR = fileURLToPath(new URL("../docs", import.meta.url));
 
@@ -27,9 +34,13 @@ async function main(): Promise<void> {
 
   await ensureOllama();
   const assistant = new GardenAssistant(await buildStore(DOCS_DIR));
+  const handler = createHandler();
   for (const question of questions) {
-    console.log(`Q: ${question}\nA: ${await assistant.ask(question)}\n`);
+    console.log(`Q: ${question}\nA: ${await assistant.ask(question, [handler])}\n`);
   }
+  // The SDK batches traces in the background; without this flush a short script can exit before they are sent.
+  await handler.flushAsync();
+  console.log(`Done. Open the "${PROJECT}" project in Opik.`);
 }
 
 main().catch((err) => {

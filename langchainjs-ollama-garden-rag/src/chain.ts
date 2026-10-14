@@ -1,3 +1,4 @@
+import type { BaseCallbackHandler } from "@langchain/core/callbacks/base";
 import { StringOutputParser } from "@langchain/core/output_parsers";
 import { ChatPromptTemplate } from "@langchain/core/prompts";
 import { ChatOllama, OllamaEmbeddings } from "@langchain/ollama";
@@ -43,9 +44,11 @@ export class GardenAssistant {
     return this.store.search(question, TOP_K);
   }
 
-  async ask(question: string): Promise<string> {
+  /** Pass callbacks (e.g. the Opik handler) to trace the run; omit them and nothing is logged. */
+  async ask(question: string, callbacks: BaseCallbackHandler[] = []): Promise<string> {
     const hits = await this.retrieve(question);
-    const chain = prompt.pipe(this.llm).pipe(new StringOutputParser());
-    return chain.invoke({ context: formatContext(hits), question });
+    // runName becomes the trace name in Opik.
+    const chain = prompt.pipe(this.llm).pipe(new StringOutputParser()).withConfig({ runName: "ask_the_garden" });
+    return chain.invoke({ context: formatContext(hits), question }, { callbacks });
   }
 }
