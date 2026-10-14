@@ -1,0 +1,16 @@
+[project]
+name = "whisper-vet-voicemail-triage"
+version = "0.1.0"
+description = "Overnight voicemail triage for a fictional vet clinic: TTS voicemails, Whisper transcription, gpt-4o-mini urgency classification"
+requires-python = ">=3.12"
+dependencies = [
+    "openai>=2.0",
+    "python-dotenv>=1.0",
+]
+
+[dependency-groups]
+dev = ["pytest>=8"]
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = ["tests"]

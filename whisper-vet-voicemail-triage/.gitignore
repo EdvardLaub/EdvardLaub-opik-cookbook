@@ -1,0 +1,10 @@
+__pycache__/
+*.py[oc]
+.venv/
+.env
+uv.lock
+.pytest_cache/
+# Generated at run time: synthesized voicemail MP3s and cached transcripts.
+audio/
+out/
+opik_test_suite_reports/
