@@ -8,6 +8,7 @@ dependencies = [
     "langchain-openai>=1.0",
     "langgraph>=1.0",
     "numpy>=2.0",  # InMemoryVectorStore imports it lazily for cosine similarity
+    "opik>=2.2.35",
     "python-dotenv>=1.0",
 ]
 

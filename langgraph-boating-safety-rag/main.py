@@ -1,6 +1,13 @@
 """Ask the boating-safety assistant a few questions."""
 
+import os
+
+PROJECT_NAME = "langgraph-boating-safety-rag"
+# Set before importing opik so every trace, dataset and experiment lands in this project.
+os.environ.setdefault("OPIK_PROJECT_NAME", PROJECT_NAME)
+
 import dotenv
+import opik
 
 dotenv.load_dotenv(dotenv.find_dotenv(usecwd=True))  # OPENAI_API_KEY
 
@@ -19,6 +26,8 @@ def main() -> None:
     for question in QUESTIONS:
         result = app.invoke({"question": question})
         print(f"Q: {question}\nA: {result['answer']}\n")
+    # Traces are sent from a background thread; flush so none are lost on exit.
+    opik.flush_tracker()
 
 
 if __name__ == "__main__":

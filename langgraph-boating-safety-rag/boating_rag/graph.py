@@ -2,7 +2,9 @@
 
 from typing_extensions import TypedDict
 
+import opik
 from langchain_openai import ChatOpenAI
+from opik.integrations.langchain import OpikTracer, track_langgraph
 from langgraph.graph import END, START, StateGraph
 
 from boating_rag.retriever import build_retriever, search
@@ -12,6 +14,9 @@ SYSTEM_PROMPT = (
     "the handbook excerpts below. If the excerpts do not cover the question, "
     "say you don't know. Be concise.\n\n"
 )
+
+
+PROJECT_NAME = "langgraph-boating-safety-rag"
 
 
 class State(TypedDict):
@@ -46,4 +51,8 @@ def build_graph(retriever=None, llm=None):
     graph.add_edge(START, "retrieve")
     graph.add_edge("retrieve", "generate")
     graph.add_edge("generate", END)
-    return graph.compile()
+    # track_langgraph attaches an OpikTracer to the compiled graph once: every
+    # invoke() becomes one trace, with the retrieve / generate nodes and the
+    # ChatOpenAI call as nested spans (llm span carries tokens and cost).
+    tracer = OpikTracer(project_name=PROJECT_NAME)
+    return track_langgraph(graph.compile(), tracer)
