@@ -1,0 +1,42 @@
+[
+  {
+    "ticket_id": "WS-2041",
+    "customer": "Ines Calloway",
+    "bike": "Brightwater Gravel GX, 2022",
+    "issue": "Rear derailleur skips under load; chain stretched.",
+    "status": "waiting_for_parts",
+    "parts_needed": ["CHN-12S", "CAS-11-34"],
+    "labour_minutes": 90,
+    "quote_eur": 148.5
+  },
+  {
+    "ticket_id": "WS-2042",
+    "customer": "Tomasz Brandt",
+    "bike": "Vellum City 7 hub-gear commuter",
+    "issue": "Front tyre slow puncture, brake pads worn.",
+    "status": "ready_for_pickup",
+    "parts_needed": [],
+    "labour_minutes": 0,
+    "quote_eur": 36.0
+  },
+  {
+    "ticket_id": "WS-2043",
+    "customer": "Priya Nandakumar",
+    "bike": "Ferrule Trail 29 mountain bike",
+    "issue": "Hydraulic rear brake spongy, needs bleed and new rotor.",
+    "status": "in_workshop",
+    "parts_needed": ["ROT-160", "BRK-FLD"],
+    "labour_minutes": 60,
+    "quote_eur": 89.0
+  },
+  {
+    "ticket_id": "WS-2044",
+    "customer": "Lars Okonkwo",
+    "bike": "Kestrel Road R5, 2019",
+    "issue": "Full service plus new bar tape and tubeless conversion.",
+    "status": "quoted",
+    "parts_needed": ["TPE-DRP", "TUB-700"],
+    "labour_minutes": 120,
+    "quote_eur": 215.0
+  }
+]

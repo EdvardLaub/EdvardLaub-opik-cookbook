@@ -1,0 +1,10 @@
+[
+  { "sku": "CHN-12S", "name": "12-speed chain, 126 links", "price_eur": 38.0, "stock": 6, "fits": "12-speed drivetrains" },
+  { "sku": "CAS-11-34", "name": "11-34T 12-speed cassette", "price_eur": 64.0, "stock": 0, "fits": "12-speed drivetrains" },
+  { "sku": "ROT-160", "name": "160 mm disc rotor, centre-lock", "price_eur": 27.5, "stock": 4, "fits": "hydraulic disc brakes" },
+  { "sku": "BRK-FLD", "name": "Mineral brake fluid, 100 ml", "price_eur": 9.0, "stock": 11, "fits": "hydraulic disc brakes" },
+  { "sku": "TPE-DRP", "name": "Cork bar tape, drop bars", "price_eur": 21.0, "stock": 2, "fits": "road and gravel drop bars" },
+  { "sku": "TUB-700", "name": "Tubeless tape and sealant kit, 700c", "price_eur": 24.0, "stock": 0, "fits": "700c tubeless-ready rims" },
+  { "sku": "TYR-26x2", "name": "26 x 2.0 touring tyre", "price_eur": 31.0, "stock": 9, "fits": "26 inch wheels" },
+  { "sku": "PAD-DSC", "name": "Disc brake pads, resin", "price_eur": 16.0, "stock": 14, "fits": "hydraulic disc brakes" }
+]

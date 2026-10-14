@@ -1,0 +1,9 @@
+[
+  { "slot_id": "S-1101", "date": "2026-11-02", "start": "09:00", "mechanic": "Odile", "minutes": 120, "booked": false },
+  { "slot_id": "S-1102", "date": "2026-11-02", "start": "13:00", "mechanic": "Odile", "minutes": 60, "booked": true },
+  { "slot_id": "S-1103", "date": "2026-11-03", "start": "10:00", "mechanic": "Bram", "minutes": 90, "booked": false },
+  { "slot_id": "S-1104", "date": "2026-11-03", "start": "14:00", "mechanic": "Bram", "minutes": 30, "booked": false },
+  { "slot_id": "S-1105", "date": "2026-11-05", "start": "09:30", "mechanic": "Odile", "minutes": 180, "booked": false },
+  { "slot_id": "S-1106", "date": "2026-11-06", "start": "11:00", "mechanic": "Bram", "minutes": 60, "booked": true },
+  { "slot_id": "S-1107", "date": "2026-11-09", "start": "09:00", "mechanic": "Bram", "minutes": 120, "booked": false }
+]

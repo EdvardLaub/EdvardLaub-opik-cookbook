@@ -1,0 +1,14 @@
+[
+  {
+    "title": "Where is my bike?",
+    "message": "Hi, it's Priya Nandakumar. What's the status of my mountain bike, and is everything for the repair in stock?"
+  },
+  {
+    "title": "Waiting on parts, then a booking",
+    "message": "I'm Ines Calloway, ticket WS-2041. Are the parts for my gravel bike in stock yet, and when is the earliest free slot that fits the whole job?"
+  },
+  {
+    "title": "Quick walk-in question",
+    "message": "Do you stock a 26 inch touring tyre, and what is the first free 30 minute slot I could drop a bike in for a fitting?"
+  }
+]
