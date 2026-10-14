@@ -1,0 +1,26 @@
+[project]
+name = "smolagents-solar-output-analyst"
+version = "0.1.0"
+description = "A smolagents CodeAgent that hunts anomalies in a community solar garden's daily output CSV; its generated pandas code and execution logs are traced to Opik over OpenTelemetry"
+requires-python = ">=3.12"
+dependencies = [
+    "smolagents[openai]>=1.26.0",
+    "pandas>=2.2",
+    "python-dotenv>=1.0",
+]
+
+[project.scripts]
+solar-analyst = "solar_analyst.cli:main"
+
+[dependency-groups]
+dev = ["pytest>=8"]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["solar_analyst"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
