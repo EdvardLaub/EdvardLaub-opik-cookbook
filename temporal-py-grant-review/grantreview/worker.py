@@ -15,8 +15,9 @@ from grantreview.workflows import GrantReviewWorkflow
 
 
 async def run_worker(address: str) -> None:
-    # The worker process exports its own spans; the interceptor must be on BOTH the client
-    # it connects with and the Worker, or workflow and activity spans lose their parent.
+    # The worker process exports its own spans. The interceptor goes on the client only:
+    # a Worker adopts its client's interceptors, so also listing it on the Worker would
+    # make every workflow and activity span appear twice in the Opik trace.
     interceptor = setup_tracing("grant-review-worker")
     client = await Client.connect(address, interceptors=[interceptor])
     worker = Worker(
@@ -24,7 +25,6 @@ async def run_worker(address: str) -> None:
         task_queue=TASK_QUEUE,
         workflows=[GrantReviewWorkflow],
         activities=[check_eligibility, score_application, draft_letter],
-        interceptors=[interceptor],
     )
     stop = asyncio.Event()
     loop = asyncio.get_running_loop()
@@ -32,7 +32,7 @@ async def run_worker(address: str) -> None:
         loop.add_signal_handler(sig, stop.set)
     async with worker:
         await stop.wait()
-    # A killed process would drop the spans still waiting in the batch exporter.
+    # Export the spans still waiting in the batch exporter before the process ends.
     flush()
 
 

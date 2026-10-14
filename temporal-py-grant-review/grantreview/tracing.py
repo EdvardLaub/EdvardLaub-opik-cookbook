@@ -8,6 +8,7 @@ land in one project, where Opik joins them by trace id.
 """
 
 import configparser
+import json
 import os
 from contextlib import contextmanager
 from pathlib import Path
@@ -64,10 +65,19 @@ def flush() -> None:
 
 
 @contextmanager
-def request_root(name: str) -> Iterator[None]:
-    """Client-side root span. The workflow's spans nest under it via Temporal's headers."""
-    with trace.get_tracer("grantreview").start_as_current_span(name):
-        yield
+def request_root(name: str, input: object) -> Iterator[trace.Span]:
+    """Client-side root span. The workflow's spans nest under it via Temporal's headers.
+
+    Its `input` / `output` attributes become the trace's Input and Output columns; call
+    set_output() on the yielded span with the result.
+    """
+    with trace.get_tracer("grantreview").start_as_current_span(name) as span:
+        span.set_attribute("input", json.dumps(input, default=str))
+        yield span
+
+
+def set_output(span: trace.Span, output: object) -> None:
+    span.set_attribute("output", json.dumps(output, default=str))
 
 
 @contextmanager
@@ -81,17 +91,19 @@ def llm_span(name: str, model: str, messages: list[dict]) -> Iterator[trace.Span
         span.set_attribute("gen_ai.system", "openai")  # a recognised provider lets Opik price the call
         span.set_attribute("gen_ai.operation.name", "chat")
         span.set_attribute("gen_ai.request.model", model)
-        for i, m in enumerate(messages):
-            span.set_attribute(f"gen_ai.prompt.{i}.role", m["role"])
-            span.set_attribute(f"gen_ai.prompt.{i}.content", m["content"])
+        # Opik's mapper matches gen_ai.prompt / gen_ai.completion as exact keys, so the
+        # messages go in as one JSON string; indexed keys (gen_ai.prompt.0.content) end up
+        # as loose metadata and leave the span's input and output empty.
+        span.set_attribute("gen_ai.prompt", json.dumps(messages))
         yield span
 
 
 def record_completion(span: trace.Span, response) -> None:
     """Attach the answer and token usage from an OpenAI response to the llm span."""
     span.set_attribute("gen_ai.response.model", response.model)
-    span.set_attribute("gen_ai.completion.0.role", "assistant")
-    span.set_attribute("gen_ai.completion.0.content", response.choices[0].message.content or "")
+    span.set_attribute(
+        "gen_ai.completion", json.dumps([{"role": "assistant", "content": response.choices[0].message.content or ""}])
+    )
     if response.usage:
         span.set_attribute("gen_ai.usage.input_tokens", response.usage.prompt_tokens)
         span.set_attribute("gen_ai.usage.output_tokens", response.usage.completion_tokens)

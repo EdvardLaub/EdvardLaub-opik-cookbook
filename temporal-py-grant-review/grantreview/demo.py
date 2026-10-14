@@ -1,6 +1,7 @@
 """Self-contained demo: dev server, a separately spawned worker, and the client."""
 
 import asyncio
+from dataclasses import asdict
 import os
 import subprocess
 import sys
@@ -11,7 +12,7 @@ from temporalio.testing import WorkflowEnvironment
 
 from grantreview.data import APPLICATIONS
 from grantreview.models import TASK_QUEUE, Application, Review
-from grantreview.tracing import flush, request_root, setup_tracing
+from grantreview.tracing import flush, request_root, set_output, setup_tracing
 from grantreview.workflows import GrantReviewWorkflow
 
 # Ports 4240-4249 are reserved for this example; never the default 7233.
@@ -22,10 +23,12 @@ UI_PORT = int(os.getenv("TEMPORAL_UI_PORT", "4241"))
 async def review(client: Client, app: Application) -> Review:
     # The root span is the trace's top; Temporal's interceptor passes its context to the
     # worker, so the workflow and activity spans over there nest underneath it.
-    with request_root(f"review:{app.id}"):
-        return await client.execute_workflow(
+    with request_root(f"review:{app.id}", asdict(app)) as root:
+        result = await client.execute_workflow(
             GrantReviewWorkflow.run, app, id=f"grant-review-{app.id}", task_queue=TASK_QUEUE
         )
+        set_output(root, {"decision": result.decision, "letter": result.letter})
+        return result
 
 
 async def run_demo() -> None:
@@ -37,6 +40,7 @@ async def run_demo() -> None:
         [sys.executable, "-m", "grantreview.worker"],
         env={**os.environ, "TEMPORAL_ADDRESS": address},
     )
+    print(f"client process {os.getpid()}, worker process {worker.pid}, Temporal UI http://localhost:{UI_PORT}")
     try:
         client = await Client.connect(address, interceptors=[setup_tracing("grant-review-client")])
         reviews = await asyncio.gather(*(review(client, a) for a in APPLICATIONS))
