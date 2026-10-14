@@ -1,0 +1,29 @@
+{
+  "name": "openai-ts-museum-guide-chat",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Visitor-guide chatbot for a fictional natural-history museum, traced with Opik threads",
+  "scripts": {
+    "demo": "tsx src/demo.ts",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.5",
+    "tsx": "^4.23.15",
+    "typescript": "^7.0.2",
+    "vitest": "^5.0.4"
+  },
+  "overrides": {
+    "opik-openai": {
+      "opik": "$opik"
+    }
+  },
+  "dependencies": {
+    "dotenv": "^18.0.7",
+    "openai": "^6.49.0",
+    "opik": "2.2.100",
+    "opik-openai": "2.2.100"
+  }
+}
