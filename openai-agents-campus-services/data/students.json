@@ -1,0 +1,6 @@
+[
+  {"id": "S1001", "name": "Maren Okafor", "year": 2, "major": "Marine Biology", "standing": "good"},
+  {"id": "S1002", "name": "Tobias Lindqvist", "year": 3, "major": "Computer Science", "standing": "good"},
+  {"id": "S1003", "name": "Priya Raman", "year": 1, "major": "Undeclared", "standing": "good"},
+  {"id": "S1004", "name": "Declan Ferreira", "year": 4, "major": "History", "standing": "probation"}
+]

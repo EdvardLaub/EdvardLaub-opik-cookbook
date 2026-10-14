@@ -1,0 +1,15 @@
+{
+  "assignments": [
+    {"student_id": "S1001", "hall": "Kelp Hall", "room": "214", "lease_ends": "2027-05-20"},
+    {"student_id": "S1002", "hall": "Birchwood Court", "room": "3B", "lease_ends": "2027-05-20"},
+    {"student_id": "S1003", "hall": "Kelp Hall", "room": "108", "lease_ends": "2027-05-20"},
+    {"student_id": "S1004", "hall": null, "room": null, "lease_ends": null}
+  ],
+  "vacancies": [
+    {"hall": "Kelp Hall", "room": "301", "type": "single", "rent_per_month": 780},
+    {"hall": "Kelp Hall", "room": "115", "type": "double", "rent_per_month": 540},
+    {"hall": "Birchwood Court", "room": "2A", "type": "single", "rent_per_month": 860},
+    {"hall": "Birchwood Court", "room": "4C", "type": "double", "rent_per_month": 590},
+    {"hall": "Harbor Lofts", "room": "12", "type": "studio", "rent_per_month": 1150}
+  ]
+}

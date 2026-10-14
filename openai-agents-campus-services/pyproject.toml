@@ -1,0 +1,17 @@
+[project]
+name = "openai-agents-campus-services"
+version = "0.1.0"
+description = "A student-services desk: triage agent plus housing, financial-aid and registrar specialists, traced with Opik."
+requires-python = ">=3.12"
+dependencies = [
+    "openai-agents==0.23.1",
+    "opik==2.2.100",
+    "python-dotenv>=1.2.3",
+]
+
+[dependency-groups]
+dev = ["pytest>=8.0"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]

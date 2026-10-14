@@ -1,0 +1,23 @@
+{
+  "enrollments": [
+    {"student_id": "S1001", "term": "Fall 2026", "courses": [
+      {"code": "BIO 301", "title": "Tidepool Ecology", "credits": 4},
+      {"code": "CHEM 210", "title": "Organic Chemistry I", "credits": 4},
+      {"code": "STAT 200", "title": "Applied Statistics", "credits": 3}]},
+    {"student_id": "S1002", "term": "Fall 2026", "courses": [
+      {"code": "CS 340", "title": "Distributed Systems", "credits": 4},
+      {"code": "CS 360", "title": "Databases", "credits": 4},
+      {"code": "MATH 320", "title": "Linear Algebra", "credits": 3}]},
+    {"student_id": "S1003", "term": "Fall 2026", "courses": [
+      {"code": "ENG 101", "title": "Writing Seminar", "credits": 3},
+      {"code": "PSY 100", "title": "Intro Psychology", "credits": 3}]},
+    {"student_id": "S1004", "term": "Fall 2026", "courses": [
+      {"code": "HIST 480", "title": "Senior Thesis", "credits": 4}]}
+  ],
+  "holds": [
+    {"student_id": "S1004", "hold": "Unpaid tuition balance", "blocks": ["registration", "transcripts"]},
+    {"student_id": "S1002", "hold": "Missing immunization record", "blocks": ["registration"]}
+  ],
+  "add_drop_deadline": "2026-09-18",
+  "withdrawal_deadline": "2026-11-06"
+}

@@ -1,0 +1,15 @@
+{
+  "packages": [
+    {"student_id": "S1001", "grant": 6000, "scholarship": 2500, "loan_offered": 3500, "work_study": 1800, "year": "2026-27"},
+    {"student_id": "S1002", "grant": 2000, "scholarship": 0, "loan_offered": 5500, "work_study": 0, "year": "2026-27"},
+    {"student_id": "S1003", "grant": 7500, "scholarship": 4000, "loan_offered": 0, "work_study": 2400, "year": "2026-27"},
+    {"student_id": "S1004", "grant": 0, "scholarship": 0, "loan_offered": 5500, "work_study": 0, "year": "2026-27"}
+  ],
+  "tasks": [
+    {"student_id": "S1001", "task": "Sign master promissory note", "status": "done"},
+    {"student_id": "S1002", "task": "Submit 2026 tax transcript", "status": "missing", "due": "2026-11-15"},
+    {"student_id": "S1003", "task": "Accept work-study offer", "status": "pending", "due": "2026-10-31"},
+    {"student_id": "S1004", "task": "Satisfactory academic progress appeal", "status": "missing", "due": "2026-10-25"}
+  ],
+  "deadlines": {"fafsa_priority": "2027-02-01", "tuition_payment": "2026-10-30"}
+}
