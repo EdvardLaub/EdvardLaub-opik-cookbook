@@ -1,0 +1,12 @@
+S01 | Kestrel Island's Harrow Glacier retreats by about 12 meters every year.
+S02 | Lichen of the species Aurelia mossii survives at temperatures down to minus 60 degrees Celsius.
+S03 | The Pellam Telescope sits at 4,200 meters above sea level on Mount Orsen.
+S04 | Quartzite from the Dunmere quarry conducts heat roughly twice as fast as granite.
+S05 | The tidal pools at Calder Reef refill completely every 11 hours.
+S06 | Dr. Ines Varga discovered the mineral tolbanite in 1974.
+S07 | Tolbanite turns from blue to green when heated above 300 degrees Celsius.
+S08 | The Meridian Array measures cosmic ray bursts with 64 underground detectors.
+S09 | Saltwater from the Osmere Basin is three times saltier than ordinary seawater.
+S10 | The aurora observatory at Fennick Point records an average of 140 clear nights per year.
+S11 | Bluefin sparrows migrate 2,800 kilometers from Calder Reef to the Orsen foothills.
+S12 | The Brannock Seed Vault keeps its samples at a constant minus 18 degrees Celsius.

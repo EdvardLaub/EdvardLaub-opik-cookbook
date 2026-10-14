@@ -1,0 +1,10 @@
+[
+  {"claim": "The Pellam Telescope is located 4,200 meters above sea level.", "verdict": "SUPPORTED", "evidence": "S03"},
+  {"claim": "Osmere Basin water is about the same salinity as normal seawater.", "verdict": "REFUTED", "evidence": "S09"},
+  {"claim": "Fennick Point gets more clear nights than any other observatory site.", "verdict": "NOT ENOUGH INFO", "evidence": "none"},
+  {"claim": "Dr. Ines Varga found tolbanite in 1974.", "verdict": "SUPPORTED", "evidence": "S06"},
+  {"claim": "Bluefin sparrows fly from Calder Reef to the Orsen foothills, a trip of 2,800 kilometers.", "verdict": "SUPPORTED", "evidence": "S11"},
+  {"claim": "The Brannock Seed Vault is kept at a constant minus 40 degrees Celsius.", "verdict": "REFUTED", "evidence": "S12"},
+  {"claim": "Kestrel Island's glacier is growing by 12 meters a year.", "verdict": "REFUTED", "evidence": "S01"},
+  {"claim": "Dunmere quarry produces more quartzite than any other quarry.", "verdict": "NOT ENOUGH INFO", "evidence": "none"}
+]

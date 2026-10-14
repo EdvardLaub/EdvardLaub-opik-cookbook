@@ -1,0 +1,10 @@
+[
+  {"claim": "Harrow Glacier loses about 12 meters of length each year.", "verdict": "SUPPORTED", "evidence": "S01"},
+  {"claim": "Aurelia mossii cannot survive below minus 20 degrees Celsius.", "verdict": "REFUTED", "evidence": "S02"},
+  {"claim": "Mount Orsen is home to the Pellam Telescope, which is the highest telescope in the world.", "verdict": "NOT ENOUGH INFO", "evidence": "none"},
+  {"claim": "Granite conducts heat twice as fast as Dunmere quartzite.", "verdict": "REFUTED", "evidence": "S04"},
+  {"claim": "Calder Reef's tidal pools are fully refilled every 11 hours.", "verdict": "SUPPORTED", "evidence": "S05"},
+  {"claim": "Tolbanite was discovered by Dr. Ines Varga's brother.", "verdict": "NOT ENOUGH INFO", "evidence": "none"},
+  {"claim": "Heated beyond 300 degrees Celsius, tolbanite changes color from blue to green.", "verdict": "SUPPORTED", "evidence": "S07"},
+  {"claim": "The Meridian Array uses 6 detectors above ground.", "verdict": "REFUTED", "evidence": "S08"}
+]
