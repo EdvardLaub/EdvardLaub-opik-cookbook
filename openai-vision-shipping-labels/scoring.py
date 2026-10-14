@@ -8,6 +8,7 @@ and then say which fields match.
 from __future__ import annotations
 
 import re
+import unicodedata
 from typing import Any
 
 TO_KG = {"kg": 1.0, "lb": 0.45359237, "oz": 0.0283495231}
@@ -20,7 +21,9 @@ def norm_tracking(value: str) -> str:
 
 
 def norm_text(value: str) -> str:
-    return re.sub(r"[^a-z0-9]", "", value.lower())
+    """Lowercase, fold accents and ß/ss (Straße == Strasse), drop punctuation."""
+    folded = unicodedata.normalize("NFKD", value.casefold().replace("ß", "ss"))
+    return re.sub(r"[^a-z0-9]", "", folded)
 
 
 def weight_matches(expected: dict[str, Any], value: Any, unit: Any) -> bool:
