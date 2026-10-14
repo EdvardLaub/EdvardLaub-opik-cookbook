@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
 # Ask the Marigold Lane box-office assistant four patron questions through
 # Dify's service API, the same API a theater website widget would call.
-# All four share one Dify conversation.
+# All four share one Dify conversation; with tracing on, Dify reports each
+# message to Opik and uses the conversation id as the Opik thread id.
 set -euo pipefail
 
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -43,4 +44,6 @@ for i, q in enumerate(QUESTIONS, 1):
         body = json.load(resp)
     conversation_id = body.get("conversation_id", conversation_id)
     print(f"\nBox office: {body['answer']}")
+
+print("\nDone. Open the 'dify-theater-box-office' project in Opik: Traces for the messages, Threads for the conversation.")
 PY
