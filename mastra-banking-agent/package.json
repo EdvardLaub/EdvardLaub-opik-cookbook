@@ -10,14 +10,17 @@
   "scripts": {
     "demo": "tsx src/demo.ts",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run"
+    "test": "vitest run",
+    "tree": "tsx scripts/show-trace-tree.ts"
   },
   "dependencies": {
     "@ai-sdk/openai": "^2.0.42",
     "@mastra/core": "^1.74.0",
     "@mastra/observability": "^1.20.0",
     "@mastra/otel-exporter": "^1.4.7",
+    "@opentelemetry/core": "^2.12.0",
     "@opentelemetry/exporter-trace-otlp-http": "^0.223.0",
+    "@opentelemetry/sdk-trace-base": "^2.12.0",
     "dotenv": "^17.2.0",
     "zod": "^4.0.0"
   },
