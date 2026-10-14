@@ -9,6 +9,11 @@ dependencies = [
     "openai>=1.60",
     "python-dotenv>=1.0",
     "httpx>=0.27",
+    "opentelemetry-sdk==1.45.1",
+    "opentelemetry-exporter-otlp-proto-http==1.45.1",
+    "opentelemetry-instrumentation-openai-v2==2.4b0",
+    # 1.2b0 renamed opentelemetry.util.genai.instruments, which openai-v2 2.4b0 imports: pin 1.1b0
+    "opentelemetry-util-genai==1.1b0",
 ]
 
 [dependency-groups]
