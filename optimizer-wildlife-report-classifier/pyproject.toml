@@ -1,0 +1,16 @@
+[project]
+name = "optimizer-wildlife-report-classifier"
+version = "0.1.0"
+description = "Opik Agent Optimizer rewrites a weak wildlife-sighting classifier prompt and saves the winner to the prompt library"
+requires-python = ">=3.12"
+dependencies = [
+    "opik-optimizer==3.2.0",
+    "python-dotenv>=1.0",
+]
+
+[dependency-groups]
+dev = ["pytest>=8"]
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = ["tests"]
