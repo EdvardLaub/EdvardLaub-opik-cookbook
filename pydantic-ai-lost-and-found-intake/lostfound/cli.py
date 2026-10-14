@@ -8,20 +8,41 @@ from pathlib import Path
 from dotenv import load_dotenv
 
 from .agent import MODEL, intake_note
+from .grounding import ungrounded_fields
 from .notes import NOTES
+from .tracing import flush, traced
+
+traced_intake = traced(intake_note)  # each call becomes one Opik trace named intake_note
 
 
 def cmd_extract(args: argparse.Namespace) -> int:
-    print(json.dumps(intake_note(args.note), indent=2))
+    record = traced_intake(args.note)
+    print(json.dumps(record, indent=2, ensure_ascii=False))
+    flush()
     return 0
 
 
 def cmd_intake(args: argparse.Namespace) -> int:
     print(f"Logging {len(NOTES)} desk notes with {MODEL}...\n")
+    flagged = 0
     for note in NOTES:
+        record = traced_intake(note)
         print(f"  {note[:64]!r}...")
-        print(f"    -> {json.dumps(intake_note(note))}\n")
+        print(f"    -> {json.dumps(record, ensure_ascii=False)}")
+        bad = ungrounded_fields(record, note)
+        if bad:
+            flagged += 1
+            print(f"    !! not in the note: {bad}")
+        print()
+    print(f"{flagged}/{len(NOTES)} records contain words the note never used")
+    flush()  # without this the last spans never leave the process
     return 0
+
+
+def cmd_suite(args: argparse.Namespace) -> int:
+    from .suite import run_suite
+
+    return run_suite()
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -32,8 +53,11 @@ def build_parser() -> argparse.ArgumentParser:
     p.add_argument("note", help="the desk note text")
     p.set_defaults(func=cmd_extract)
 
-    p = sub.add_parser("intake", help="log every built-in desk note")
+    p = sub.add_parser("intake", help="log every built-in desk note and flag ungrounded words")
     p.set_defaults(func=cmd_intake)
+
+    p = sub.add_parser("suite", help="run the Opik test suite over the built-in notes")
+    p.set_defaults(func=cmd_suite)
     return parser
 
 
@@ -42,6 +66,9 @@ def main(argv: list[str] | None = None) -> int:
     load_dotenv(Path(__file__).resolve().parents[2] / ".env")
     load_dotenv()
     args = build_parser().parse_args(argv)
+    from .tracing import setup_tracing
+
+    setup_tracing()  # must run before the first agent call
     return args.func(args)
 
 

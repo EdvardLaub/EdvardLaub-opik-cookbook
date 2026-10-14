@@ -5,6 +5,8 @@ description = "Pydantic AI agent that turns messy lost-and-found desk notes into
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
+    "logfire>=5.2.0",
+    "opik>=2.2.100",
     "pydantic-ai>=2.31.1",
     "python-dotenv>=1.2.3",
 ]

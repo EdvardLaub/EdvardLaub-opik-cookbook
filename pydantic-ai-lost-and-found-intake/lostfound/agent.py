@@ -20,8 +20,8 @@ SYSTEM_PROMPT = (
 
 @lru_cache(maxsize=1)
 def get_agent() -> Agent:
-    """Built lazily so importing the package (and the offline tests) needs no API key."""
-    return Agent(MODEL, output_type=FoundItemRecord, system_prompt=SYSTEM_PROMPT)
+    """Built lazily; defer_model_check skips the provider-key check so tests need no API key."""
+    return Agent(MODEL, output_type=FoundItemRecord, system_prompt=SYSTEM_PROMPT, defer_model_check=True, name="intake_agent")
 
 
 def intake_note(note: str) -> dict[str, Any]:
