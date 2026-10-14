@@ -1,0 +1,19 @@
+[project]
+name = "langgraph-boating-safety-rag"
+version = "0.1.0"
+description = "RAG over a fictional boating-safety handbook with LangGraph"
+requires-python = ">=3.12"
+dependencies = [
+    "langchain-core>=1.0",
+    "langchain-openai>=1.0",
+    "langgraph>=1.0",
+    "numpy>=2.0",  # InMemoryVectorStore imports it lazily for cosine similarity
+    "python-dotenv>=1.0",
+]
+
+[dependency-groups]
+dev = ["pytest>=8"]
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = ["tests"]
