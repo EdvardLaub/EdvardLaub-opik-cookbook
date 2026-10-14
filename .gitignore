@@ -1,0 +1,13 @@
+.env
+.venv/
+__pycache__/
+*.pyc
+node_modules/
+.DS_Store
+uv.lock
+dist/
+*.log
+.pytest_cache/
+WORKLOG.md
+STATUS.md
+PLAN_DECISIONS.md
