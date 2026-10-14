@@ -34,23 +34,27 @@ ground truth computed from the CSV (`checks.py`). Tracing lives in `tracing.py`:
 ## See it in Opik
 
 Run the scripted set, then open the **smolagents-solar-output-analyst** project. There is one
-`CodeAgent.run` trace per question (three in all). My run had 8, 10 and 8 spans: the root, a `Step N`
+`CodeAgent.run` trace per question (three in all). Mine had 8, 14 and 6 spans: the root, a `Step N`
 span per think-code-observe cycle, an `OpenAIModel.generate` llm span per model call, and a
 `FinalAnswerTool` span.
 
-Open the second trace, the Barn Roof question. Expand `OpenAIModel.generate` in step 2 and read the
-output: the model's reasoning followed by the `<code>` block it wrote. In my run it split the data at
-`solar_data['date'].median()`, averaged kWh per kW before and after, and computed a drop. Now open the
-matching `Step 2` span: its output holds the execution log, `percentage_drop 13.144898`. That is the
-whole story of the one failed check in my run: the agent named the right array (Barn Roof) but
-reported a 13% drop "from the median date", while the real change is about 25% starting 1 May.
-Splitting at the midpoint of the whole period blurs a step change, and you can see that choice
-in the span rather than guessing at it. The other two answers (Pond Edge, 11 to 16 May; Hillside
-Tracker, 9 April) were correct and their code and logs are right there too. Your run will differ in
-detail, because the model's code varies run to run.
+Open the second trace, the Barn Roof question, which is the hard one. Expand an `OpenAIModel.generate`
+span and read its output: the model's reasoning followed by the `<code>` block it wrote. Then open the
+`Step` span that ran it, whose output holds the execution log. In my run the agent took a
+rolling mean of kWh per kW, computed day-over-day drops, and `Step 4` printed a table with
+`percentage_drop` values of 105.66, 106.34 and 107.98 for three different arrays. The final answer
+repeated those numbers ("Barn Roof and North Meadow dropped on 2026-03-03 by approximately 105.66%"),
+and the check printed `FAIL underperformer`. The answer sounds quantitative; the trace shows it
+compared consecutive days (noise) instead of each array against its siblings over weeks, which
+is exactly what the CSV's planted step change needs. An earlier run of the same question named Barn
+Roof but reported a 13% drop "from the median date", also visible as a median-date split in the
+generated code. The other two answers (Pond Edge, 11 to 16 May; Hillside Tracker, 9 April) were
+correct in both runs. Expect your run to differ in detail; the model's code varies.
 
-On the trace list, the input column is the briefing plus the question and the output column is the final
-answer. The whole scripted run took about 30 seconds.
+On the trace list the columns are filled: input is the briefing plus the question, output is the
+final answer, and `usage` and `total_estimated_cost` hold the sum of the model calls. The Barn Roof
+trace used 21,636 prompt tokens and cost about $0.0042; the whole scripted run cost roughly $0.007 and
+took about 30 seconds.
 
 ## Run it yourself
 
@@ -76,6 +80,23 @@ Add `--no-trace` to run without exporting spans. Tests need no keys and no Opik:
 - Regenerate the data with different anomalies by editing `scripts/generate_data.py`, then check the
   answers against `solar_analyst/checks.py`.
 
+## Gotchas we hit
+
+**The cost column is empty, and trace usage is twice what the model calls add up to.** The raw
+OpenInference spans carry `llm.provider`, `llm.token_count.*` and so on, and Opik shows token counts
+for them but no `total_estimated_cost`, even though the llm spans have `model=gpt-4o-mini` and
+`provider=openai`. On top of that, the `CodeAgent.run` span repeats its children's token totals, so
+the trace-level usage (9,812 prompt tokens in my first try) is double the real figure (4,906). In my runs
+Opik only priced spans whose usage carried `prompt_tokens` / `completion_tokens` keys, which it fills from
+`gen_ai.*` attributes. The fix in `tracing.py` is an exporter wrapper that, just before export, adds
+`gen_ai.system`, `gen_ai.request.model`, `gen_ai.usage.input_tokens` and `gen_ai.usage.output_tokens`
+to LLM spans and removes `llm.token_count.*` from every other span:
+
+```python
+provider.add_span_processor(BatchSpanProcessor(OpikAttributeFixer(OTLPSpanExporter(endpoint=url, headers=headers))))
+```
+
+Adding only `gen_ai.system` and the model name was not enough; the token attributes were needed.
 
 ## How it's put together
 
@@ -83,10 +104,10 @@ Add `--no-trace` to run without exporting spans. Tests need no keys and no Opik:
 - `solar_analyst/agent.py`: `build_agent()`, a pandas-only `CodeAgent` on `gpt-4o-mini`.
 - `solar_analyst/questions.py`: the scripted questions, one per planted anomaly.
 - `solar_analyst/checks.py`: ground truth from the CSV and a keyword grader for the answers.
-- `solar_analyst/tracing.py`: OTLP exporter to Opik, the instrumentor.
+- `solar_analyst/tracing.py`: OTLP exporter to Opik, the instrumentor, and the attribute fixer.
 - `solar_analyst/cli.py`: `solar-analyst "<question>"` or `--scripted`, plus `--no-trace`.
 - `data/solar_garden_daily.csv` and `scripts/generate_data.py`: the dataset and its seeded generator.
-- `tests/`: ground truth and grader, data loading, the CLI with a stub agent.
+- `tests/`: ground truth and grader, data loading, the CLI with a stub agent, and the tracing layer with a fake OpenAI client.
 
 ---
 
