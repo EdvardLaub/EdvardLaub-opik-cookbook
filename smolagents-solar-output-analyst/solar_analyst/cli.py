@@ -11,7 +11,8 @@ from pathlib import Path
 from dotenv import load_dotenv
 
 from solar_analyst.agent import build_agent
-from solar_analyst.data import briefing
+from solar_analyst.checks import grade, ground_truth
+from solar_analyst.data import briefing, load_production
 from solar_analyst.questions import QUESTIONS
 from solar_analyst.tracing import PROJECT_NAME, setup_tracing
 
@@ -27,6 +28,24 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     return args
 
 
+def ask(agent, text: str) -> str:
+    print(f"\n{'=' * 72}\nQuestion: {text}\n{'=' * 72}")
+    # One agent.run = one Opik trace (when tracing is on); the prompt is the trace input.
+    answer = str(agent.run(briefing() + "\nQuestion: " + text))
+    print(f"\nAnswer: {answer}")
+    return answer
+
+
+def run_scripted(agent) -> dict[str, bool]:
+    """Ask every scripted question and grade each answer against the CSV's planted anomalies."""
+    truth = ground_truth(load_production())
+    results = {q.key: grade(q.key, ask(agent, q.text), truth) for q in QUESTIONS}
+    print("\nGraded against the data:")
+    for key, ok in results.items():
+        print(f"  {'PASS' if ok else 'FAIL'}  {key}")
+    return results
+
+
 def main(argv: list[str] | None = None) -> int:
     args = parse_args(argv)
     # Keys live in the repo-root .env (a local .env works too).
@@ -37,11 +56,10 @@ def main(argv: list[str] | None = None) -> int:
 
     provider = None if args.no_trace else setup_tracing()
     agent = build_agent()
-    asked = [args.question] if args.question else [q.text for q in QUESTIONS]
-    for i, text in enumerate(asked, 1):
-        print(f"\n{'=' * 72}\nQuestion {i}: {text}\n{'=' * 72}")
-        answer = agent.run(briefing() + "\nQuestion: " + text)
-        print(f"\nAnswer {i}: {answer}")
+    if args.question:
+        ask(agent, args.question)
+    else:
+        run_scripted(agent)
 
     if provider:
         # Spans are exported in batches; flush so the last trace is not lost at exit.
