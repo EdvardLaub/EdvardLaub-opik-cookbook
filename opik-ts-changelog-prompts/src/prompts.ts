@@ -1,3 +1,6 @@
+import type { Opik, Prompt } from "opik";
+import { PROJECT_NAME } from "./env.js";
+
 export const PROMPT_NAME = "release-notes-writer";
 
 // v1: the first thing anyone writes. It never says what to leave out or how to treat breaking changes.
@@ -19,7 +22,49 @@ Rules:
 - If nothing is breaking, do not write a "Breaking changes" section.
 - Output Markdown, starting with the heading "## <version>".`;
 
-export const CHANGE_NOTES = {
-  v1: "Initial version: summarize the commits.",
-  v2: "Audience and noise rules: no hashes or internal jargon, skip invisible commits, add a Breaking changes section with migration steps.",
-};
+const VERSIONS = [
+  { version: "v1", text: PROMPT_V1, note: "Initial version: summarize the commits." },
+  {
+    version: "v2",
+    text: PROMPT_V2,
+    note: "Audience and noise rules: no hashes or internal jargon, skip invisible commits, add a Breaking changes section with migration steps.",
+  },
+] as const;
+
+/** Just the slice of the Opik client this module needs (lets tests pass a stub). */
+export type PromptClient = Pick<Opik, "createPrompt" | "getPrompt">;
+
+export interface PromptVersions {
+  v1: Prompt;
+  v2: Prompt;
+  /** Which versions this call had to create (empty on a rerun). */
+  created: string[];
+}
+
+/**
+ * Make sure the prompt library holds exactly v1 and v2 of the prompt, creating only what is missing.
+ *
+ * The TS SDK's createPrompt does not deduplicate: calling it again with unchanged text still adds a
+ * new version (v3, v4, ...). So we look each version up first and only create the absent ones,
+ * which keeps reruns from polluting the version history.
+ */
+export async function ensurePromptVersions(client: PromptClient): Promise<PromptVersions> {
+  const found: Record<string, Prompt> = {};
+  const created: string[] = [];
+  for (const { version, text, note } of VERSIONS) {
+    let prompt = await client.getPrompt({ name: PROMPT_NAME, version, projectName: PROJECT_NAME });
+    if (!prompt) {
+      // createPrompt adds one immutable version to the library entry; the change description is
+      // what the version list and the diff view show next to it.
+      prompt = await client.createPrompt({
+        name: PROMPT_NAME,
+        prompt: text,
+        projectName: PROJECT_NAME,
+        changeDescription: note,
+      });
+      created.push(version);
+    }
+    found[version] = prompt;
+  }
+  return { v1: found.v1!, v2: found.v2!, created };
+}
