@@ -9,6 +9,8 @@ from beeai_framework.agents.react import ReActAgent
 from beeai_framework.backend import ChatModel, ChatModelParameters
 from beeai_framework.memory import UnconstrainedMemory
 
+from opentelemetry import trace
+
 from expense_triage import data
 from expense_triage.tools import TOOLS
 
@@ -57,6 +59,25 @@ def parse_decision(text: str) -> str | None:
 async def triage_report(report: dict) -> tuple[str | None, str]:
     """Run the agent on one report; returns (decision, full final text)."""
     agent = build_agent()
+    # One parent span per report (no-op when tracing is off). In Opik it becomes the trace:
+    # named "triage R-1005", tagged and carrying report_id / employee metadata, with the whole
+    # BeeAI ReAct run nested underneath. opik.tags / opik.metadata.<key> are Opik's own OTel attributes.
+    with trace.get_tracer("expense_triage").start_as_current_span(f"triage {report['id']}") as span:
+        span.set_attributes(
+            {
+                "opik.tags": ["expense-triage", report["category"]],
+                "opik.metadata.report_id": report["id"],
+                "opik.metadata.employee_id": report["employee_id"],
+                "opik.metadata.category": report["category"],
+                "input.value": data.format_report(report),
+            }
+        )
+        decision, text = await _run(agent, report)
+        span.set_attributes({"output.value": text, "opik.metadata.decision": decision or "unparsed"})
+    return decision, text
+
+
+async def _run(agent: ReActAgent, report: dict) -> tuple[str | None, str]:
     # BeeAI Python takes the prompt positionally (not prompt=...) and the limits as keyword args.
     response = await agent.run(
         data.format_report(report), max_iterations=8, max_retries_per_step=3, total_max_retries=10

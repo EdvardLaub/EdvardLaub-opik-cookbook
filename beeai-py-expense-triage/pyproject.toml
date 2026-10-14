@@ -6,6 +6,9 @@ requires-python = ">=3.12"
 dependencies = [
     "beeai-framework>=0.1.85",
     "python-dotenv>=1.0",
+    "openinference-instrumentation-beeai>=0.1.30",
+    "opentelemetry-sdk>=1.30",
+    "opentelemetry-exporter-otlp-proto-http>=1.30",
 ]
 
 [project.scripts]
