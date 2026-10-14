@@ -4,7 +4,9 @@
   "private": true,
   "type": "module",
   "description": "A retail-banking assistant built with Mastra, with every tool call visible as a span in Opik",
-  "engines": { "node": ">=22.13.0" },
+  "engines": {
+    "node": ">=22.13.0"
+  },
   "scripts": {
     "demo": "tsx src/demo.ts",
     "typecheck": "tsc --noEmit",
@@ -13,6 +15,9 @@
   "dependencies": {
     "@ai-sdk/openai": "^2.0.42",
     "@mastra/core": "^1.74.0",
+    "@mastra/observability": "^1.20.0",
+    "@mastra/otel-exporter": "^1.4.7",
+    "@opentelemetry/exporter-trace-otlp-http": "^0.223.0",
     "dotenv": "^17.2.0",
     "zod": "^4.0.0"
   },

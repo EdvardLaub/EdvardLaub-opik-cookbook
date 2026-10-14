@@ -1,4 +1,5 @@
 // Plays four scripted customer requests through the banking assistant.
+// Each request becomes one trace in the Opik project "mastra-banking-agent".
 import { config } from "dotenv";
 import { fileURLToPath } from "node:url";
 import { RequestContext } from "@mastra/core/request-context";
@@ -35,5 +36,9 @@ for (const [i, request] of REQUESTS.entries()) {
   const result = await agent.generate(request, { maxSteps: 6, requestContext });
   console.log(`Agent:    ${result.text}`);
 }
+
+// shutdown() flushes the exporter's batch queue: without it the last spans can be lost
+// when the process exits and the final trace shows up incomplete (or not at all) in Opik.
+await mastra.shutdown();
 
 console.log("\nCard states after the demo:", bank.listCards(CUSTOMER_ID).map((c) => `${c.id}=${c.status}`).join(", "));
