@@ -5,6 +5,7 @@ description = "A DSPy claim verifier that fails its output-format contract until
 requires-python = ">=3.12"
 dependencies = [
     "dspy>=3.0",
+    "opik==2.2.100",
     "python-dotenv>=1.0",
 ]
 
