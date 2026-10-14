@@ -16,6 +16,7 @@ Rules:
 - Never include commit hashes, issue or ticket numbers (#123, TIDE-123), or CVE-style codes in the body.
 - Never mention internal class or module names, refactors, tests, CI, docs typos or dependency bumps.
   Skip a commit entirely if a user would not notice it.
+- Always keep security fixes: say that a security issue was fixed (and what to update), without the CVE number.
 - If any commit is breaking (marked "!" or BREAKING), start the entry with a "Breaking changes" section.
   For each one, say what changed and what the user must do to migrate.
 - Put the remaining items under "Added", "Fixed" or "Improved", one plain-English sentence each.
@@ -35,8 +36,8 @@ const VERSIONS = [
 export type PromptClient = Pick<Opik, "createPrompt" | "getPrompt">;
 
 export interface PromptVersions {
-  v1: Prompt;
-  v2: Prompt;
+  /** One entry per item of VERSIONS, keyed "v1", "v2", ... */
+  byVersion: Record<string, Prompt>;
   /** Which versions this call had to create (empty on a rerun). */
   created: string[];
 }
@@ -44,12 +45,12 @@ export interface PromptVersions {
 /**
  * Make sure the prompt library holds exactly v1 and v2 of the prompt, creating only what is missing.
  *
- * The TS SDK's createPrompt does not deduplicate: calling it again with unchanged text still adds a
- * new version (v3, v4, ...). So we look each version up first and only create the absent ones,
- * which keeps reruns from polluting the version history.
+ * With opik 2.2.100, createPrompt with unchanged text returns the existing version instead of adding
+ * one, but changed text always becomes a new version. Looking each version up first means a rerun
+ * can never add v3 by accident, and lets us flag a code/library mismatch instead of hiding it.
  */
 export async function ensurePromptVersions(client: PromptClient): Promise<PromptVersions> {
-  const found: Record<string, Prompt> = {};
+  const byVersion: Record<string, Prompt> = {};
   const created: string[] = [];
   for (const { version, text, note } of VERSIONS) {
     let prompt = await client.getPrompt({ name: PROMPT_NAME, version, projectName: PROJECT_NAME });
@@ -64,7 +65,11 @@ export async function ensurePromptVersions(client: PromptClient): Promise<Prompt
       });
       created.push(version);
     }
-    found[version] = prompt;
+    // Versions are immutable. If the library's text differs from this file (you edited the constant,
+    // or edited the prompt in the Opik UI), say so: the library copy is what the tests run.
+    if (prompt.prompt !== text)
+      console.warn(`warning: library ${PROMPT_NAME} ${version} differs from src/prompts.ts; the library copy is what runs.`);
+    byVersion[version] = prompt;
   }
-  return { v1: found.v1!, v2: found.v2!, created };
+  return { byVersion, created };
 }

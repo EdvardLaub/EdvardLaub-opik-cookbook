@@ -4,14 +4,14 @@ import { PROMPT_NAME } from "./prompts.js";
 import { RELEASES } from "./releases.js";
 
 loadEnv();
-const { MODEL, flushTraces, formatCommits, getOpik, writeChangelog } = await import("./changelog.js");
+const { JUDGE_MODEL, MODEL, flushTraces, formatCommits, getOpik, writeChangelog } = await import("./changelog.js");
 const { ensurePromptVersions } = await import("./prompts.js");
 
 // The quality bar, in plain English. An LLM judge checks every assertion on every entry.
 const GLOBAL_ASSERTIONS = [
-  "The entry contains no commit hashes (short hex strings such as d41e8aa), no issue or ticket numbers (such as #412 or TIDE-871) and no CVE identifiers",
-  "The entry mentions no internal-only changes: no internal class or module names (such as StreamMux or LineSplitter), and no refactors, test changes, CI changes, docs typo fixes or dependency bumps",
-  "If any commit is marked breaking (a '!' or the word BREAKING), the entry has a clearly labelled 'Breaking changes' section that tells the user what to do; if no commit is breaking, the entry has no such section",
+  "Look only at the generated changelog entry (the output), not at the raw commit list in the input. The entry contains no commit hashes (short hex strings like 1a2b3c4), no issue or ticket numbers (like #123 or PROJ-456) and no CVE identifiers",
+  "Look only at the generated changelog entry (the output), not at the raw commit list in the input. The entry does not describe internal engineering work: no internal class or module names, and nothing about refactors, test changes, CI changes, docs typo fixes or dependency bumps. User-visible features, fixes and CLI behaviour changes are fine",
+  "If any commit in the input is marked breaking (a '!' or the word BREAKING), the entry (the output) has a clearly labelled 'Breaking changes' section that tells the user what to do; if no commit is breaking, the entry has no such section",
 ];
 
 // Item-level assertions are checked in addition to the global ones.
@@ -26,7 +26,6 @@ async function main(): Promise<void> {
 
   // 1. Prompt library: v1 and v2 of "release-notes-writer" (only the missing ones get created).
   const prompts = await ensurePromptVersions(opik);
-  const byVersion = { v1: prompts.v1, v2: prompts.v2 };
   console.log(
     prompts.created.length
       ? `Created prompt versions: ${prompts.created.join(", ")}`
@@ -42,9 +41,26 @@ async function main(): Promise<void> {
     globalAssertions: GLOBAL_ASSERTIONS,
     globalExecutionPolicy: { runsPerItem: 3, passThreshold: 2 },
   });
+  // getOrCreateTestSuite returns an existing suite as it is: it ignores globalAssertions and
+  // globalExecutionPolicy you pass on later runs. So edits to the assertions above would silently
+  // never reach the judge. Compare with what the suite stores and push only real changes
+  // (each change makes a new suite version in Opik).
+  const same = (a: unknown, b: unknown) => JSON.stringify(a) === JSON.stringify(b);
+  if (!same(await suite.getGlobalAssertions(), GLOBAL_ASSERTIONS)) {
+    await suite.updateTestSettings({ globalAssertions: GLOBAL_ASSERTIONS });
+    console.log("Updated the suite's global assertions.");
+  }
   // Items carry the raw commits, so the judge can see what the entry should have covered. Items
-  // already in the suite are skipped, so reruns do not pile up duplicates.
-  const existing = new Set((await suite.getItems()).map((i) => String(i.data.release_id)));
+  // already in the suite are not inserted again (reruns would pile up duplicates); their
+  // item-level assertions are re-synced the same way.
+  const existing = new Map((await suite.getItems()).map((i) => [String(i.data.release_id), i]));
+  const stale = [...existing.values()].filter(
+    (i) => !same(i.assertions, ITEM_ASSERTIONS[String(i.data.release_id)] ?? []),
+  );
+  if (stale.length)
+    await suite.update(
+      stale.map((i) => ({ id: i.id, assertions: ITEM_ASSERTIONS[String(i.data.release_id)] ?? [] })),
+    );
   const items: TestSuiteItem[] = RELEASES.filter((r) => !existing.has(r.id)).map((r) => ({
     data: { release_id: r.id, release: formatCommits(r) },
     ...(ITEM_ASSERTIONS[r.id] ? { assertions: ITEM_ASSERTIONS[r.id]! } : {}),
@@ -54,8 +70,7 @@ async function main(): Promise<void> {
   // 3. Run the same suite once per prompt version. Each runTests call logs one experiment, linked
   // to the exact prompt version it tested (prompts: [...]); its task runs are traces in the project.
   const results = [];
-  for (const version of ["v1", "v2"] as const) {
-    const prompt = byVersion[version];
+  for (const [version, prompt] of Object.entries(prompts.byVersion)) {
     const result = await runTests({
       testSuite: suite,
       task: async (item) => {
@@ -70,8 +85,9 @@ async function main(): Promise<void> {
       experimentName: `${PROMPT_NAME}-${version}`,
       experimentConfig: { prompt_version: version, prompt_commit: prompt.commit, model: MODEL },
       prompts: [prompt],
-      // Judge model. No reasoning_effort override: it makes the judge call fail.
-      model: MODEL,
+      // Judge model: a step up from the writer, because gpt-4o-mini mis-scored clean entries (see README).
+      // No reasoning_effort override: it makes the judge call fail.
+      model: JUDGE_MODEL,
       projectName: PROJECT_NAME,
       taskThreads: 5,
     });
@@ -91,8 +107,9 @@ async function main(): Promise<void> {
       if (!item.passed) {
         const reasons = new Set<string>();
         for (const run of item.testResults)
-          for (const s of run.scoreResults) if (s.scoringFailed || s.value !== 1) reasons.add(s.name);
-        console.log(`         failed: ${[...reasons].join(" | ")}`);
+          for (const s of run.scoreResults)
+            if (s.scoringFailed || s.value !== 1) reasons.add(`${s.name.slice(0, 70)}... -> ${(s.reason ?? "").slice(0, 160)}`);
+        for (const r of [...reasons].slice(0, 2)) console.log(`         failed: ${r}`);
       }
     }
     if (result.experimentUrl) console.log(`  run: ${result.experimentUrl}`);

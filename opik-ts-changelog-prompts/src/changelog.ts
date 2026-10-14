@@ -13,6 +13,8 @@ export interface PromptRef {
 }
 
 export const MODEL = "gpt-4o-mini";
+/** Model behind the test-suite judge. */
+export const JUDGE_MODEL = "gpt-4.1-mini";
 
 /** The user message: the release version plus the raw commit lines, exactly as git printed them. */
 export function formatCommits(release: Release): string {

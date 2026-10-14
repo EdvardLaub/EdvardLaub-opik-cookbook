@@ -50,6 +50,7 @@ describe("ensurePromptVersions", () => {
     const { client, createPrompt } = fakeLibrary();
     const result = await ensurePromptVersions(client);
     expect(result.created).toEqual(["v1", "v2"]);
+    expect(Object.keys(result.byVersion)).toEqual(["v1", "v2"]);
     expect(createPrompt.mock.calls.map((c) => c[0].prompt)).toEqual([PROMPT_V1, PROMPT_V2]);
   });
 
@@ -59,6 +60,21 @@ describe("ensurePromptVersions", () => {
     const again = await ensurePromptVersions(client);
     expect(again.created).toEqual([]);
     expect(createPrompt).toHaveBeenCalledTimes(2);
+  });
+});
+
+describe("prompt drift", () => {
+  it("warns, but does not create a version, when the library copy differs from the code", async () => {
+    const { client, createPrompt } = fakeLibrary();
+    await ensurePromptVersions(client);
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    // Simulate someone editing v2 in the library: same version id, different text.
+    const edited = await (client as never as { getPrompt: (o: object) => Promise<{ prompt: string }> }).getPrompt({ version: "v2" });
+    edited.prompt = "edited in the UI";
+    await ensurePromptVersions(client);
+    expect(warn).toHaveBeenCalledOnce();
+    expect(createPrompt).toHaveBeenCalledTimes(2);
+    warn.mockRestore();
   });
 });
 
