@@ -51,15 +51,17 @@ def check_answer(answer: str, verdict: str, evidence: str) -> dict[str, bool]:
 
 
 class VerifyClaim(dspy.Signature):
-    """Check the claim against the corpus."""
+    """Check the claim against the corpus. The verdict is one of SUPPORTED,
+    REFUTED or NOT ENOUGH INFO."""
 
     corpus: str = dspy.InputField(desc="numbered science facts, one per line")
     claim: str = dspy.InputField()
     answer: str = dspy.OutputField()
 
 
-# The signature says nothing about verdict labels or the evidence tag, so the
-# raw program writes ordinary prose; only compiled demos teach the format.
+# The signature names the three labels but not the answer format or the evidence
+# tag, so the raw program answers with a bare label or prose; only compiled demos
+# teach the "<VERDICT> | evidence: <ID>" shape.
 verifier = dspy.ChainOfThought(VerifyClaim)
 
 
@@ -78,3 +80,4 @@ def to_examples(rows: list[dict]) -> list[dspy.Example]:
 def metric(example: dspy.Example, prediction, trace=None) -> bool:
     """Compile-time metric: exact format, right verdict, right evidence id."""
     return all(check_answer(prediction.answer, example.verdict, example.evidence).values())
+

@@ -60,3 +60,10 @@ def test_traced_program_runs_with_tracking_disabled():
         return a + 1
 
     assert traced(1) == 2
+
+
+
+def test_trainset_has_not_enough_info_examples_for_the_demos():
+    # Compilation only teaches "| evidence: none" if NEI gold examples exist.
+    rows = claimcheck.load_examples("train")
+    assert sum(r["verdict"] == "NOT ENOUGH INFO" for r in rows) >= 2

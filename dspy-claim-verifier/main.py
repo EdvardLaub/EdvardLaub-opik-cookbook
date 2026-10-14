@@ -102,9 +102,14 @@ def main() -> None:
 
     run_suite(suite, claimcheck.verifier, "uncompiled", compiled=False)
 
+    # max_labeled_demos=8 is the fix that matters: with 4, the demos were all
+    # SUPPORTED/REFUTED (the teacher never produced a NOT ENOUGH INFO attempt
+    # that passed the metric), so the compiled program answered NEI claims
+    # without the "| evidence: none" tag. With 8, the unbootstrapped gold
+    # examples, NEI ones included, are added as extra demos.
     optimizer = dspy.BootstrapFewShot(
         metric=claimcheck.metric, max_bootstrapped_demos=4,
-        max_labeled_demos=4, max_rounds=1,
+        max_labeled_demos=8, max_rounds=1,
     )
     trainset = claimcheck.to_examples(claimcheck.load_examples("train"))
     compiled_program = optimizer.compile(claimcheck.verifier, trainset=trainset)
