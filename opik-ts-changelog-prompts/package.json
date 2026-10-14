@@ -1,0 +1,23 @@
+{
+  "name": "opik-ts-changelog-prompts",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Turn raw commit messages into user-facing changelog entries with a versioned prompt.",
+  "scripts": {
+    "demo": "tsx src/main.ts",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "dotenv": "^17.2.0",
+    "openai": "^6.49.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.6.0",
+    "vitest": "^3.0.0"
+  },
+  "engines": { "node": ">=20" }
+}
